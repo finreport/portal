@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinReportAI — Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --navy:#0F1F3D;--navy-mid:#162847;--navy-light:#1E3358;
+  --teal:#0E8A7A;--teal-light:#11A692;--teal-lite:#E6F4F2;
+  --gold:#C9A84C;--white:#FFFFFF;--off-white:#F4F6F9;
+  --gray:#6B7280;--gray-light:#E5E9F0;--text:#1A2A3A;
+  --red:#B91C1C;--red-soft:#FEE2E2;--green:#15803D;--green-soft:#DCFCE7;
+  --amber:#92400E;--amber-soft:#FEF9C3;
+  --sidebar:240px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--text);min-height:100vh}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{
+  min-height:100vh;background:var(--navy);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+#auth-screen::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(14,138,122,.18) 0%,transparent 70%),
+             radial-gradient(ellipse 50% 40% at 80% 80%,rgba(201,168,76,.08) 0%,transparent 60%);
+  pointer-events:none;
+}
+.auth-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:48px 40px;width:100%;max-width:420px;
+  backdrop-filter:blur(20px);position:relative;z-index:1;
+}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:36px}
+.auth-logo-mark{
+  width:38px;height:38px;background:var(--teal);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Serif Display',serif;font-size:15px;color:white;font-weight:700;
+}
+.auth-logo-text{font-size:17px;font-weight:600;color:white}
+.auth-logo-text span{color:var(--gold)}
+.auth-title{font-family:'DM Serif Display',serif;font-size:26px;color:white;margin-bottom:8px}
+.auth-sub{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:32px;line-height:1.6}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.field input{
+  width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:12px 14px;font-size:14px;color:white;font-family:'DM Sans',sans-serif;
+  transition:border-color .2s;
+}
+.field input:focus{outline:none;border-color:var(--teal)}
+.field input::placeholder{color:rgba(255,255,255,.3)}
+.btn-auth{
+  width:100%;background:var(--teal);color:white;border:none;border-radius:8px;
+  padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:background .2s,transform .1s;margin-top:4px;
+}
+.btn-auth:hover{background:var(--teal-light)}
+.btn-auth:active{transform:scale(.99)}
+.auth-error{
+  background:var(--red-soft);color:var(--red);border-radius:8px;
+  padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;
+}
+.auth-switch{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,.4)}
+.auth-switch a{color:var(--teal);cursor:pointer;text-decoration:none}
+.auth-switch a:hover{color:var(--teal-light)}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--navy);display:flex;flex-direction:column;z-index:50;
+  border-right:1px solid rgba(255,255,255,.06);
+}
+.sidebar-logo{
+  padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+}
+.sidebar-logo-mark{
+  width:34px;height:34px;background:var(--teal);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Serif Display',serif;font-size:13px;color:white;font-weight:700;
+}
+.sidebar-logo-text{font-size:15px;font-weight:600;color:white}
+.sidebar-logo-text span{color:var(--gold)}
+.sidebar-nav{padding:16px 12px;flex:1}
+.nav-section{margin-bottom:24px}
+.nav-section-label{
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.3);
+  letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin-bottom:6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:8px;
+  cursor:pointer;transition:background .15s;color:rgba(255,255,255,.55);
+  font-size:14px;font-weight:500;margin-bottom:2px;user-select:none;
+}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+.nav-item.active{background:rgba(14,138,122,.15);color:var(--teal)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.sidebar-footer{
+  padding:16px 12px;border-top:1px solid rgba(255,255,255,.06);
+}
+.firm-info{
+  display:flex;align-items:center;gap:10px;padding:10px;
+  background:rgba(255,255,255,.04);border-radius:8px;margin-bottom:8px;
+}
+.firm-avatar{
+  width:32px;height:32px;background:var(--teal);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:white;flex-shrink:0;
+}
+.firm-name{font-size:13px;font-weight:600;color:white;line-height:1.3}
+.firm-plan{font-size:11px;color:rgba(255,255,255,.4)}
+.btn-signout{
+  width:100%;background:transparent;border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.4);border-radius:6px;padding:8px;font-size:13px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.btn-signout:hover{border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7)}
+
+/* MAIN CONTENT */
+.main{margin-left:var(--sidebar);min-height:100vh}
+.topbar{
+  background:white;border-bottom:1px solid var(--gray-light);
+  padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:40;
+}
+.topbar-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy)}
+.topbar-actions{display:flex;align-items:center;gap:12px}
+.btn-primary{
+  background:var(--teal);color:white;border:none;border-radius:8px;
+  padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:background .2s;display:flex;align-items:center;gap:6px;
+}
+.btn-primary:hover{background:var(--teal-light)}
+.btn-secondary{
+  background:white;color:var(--text);border:1px solid var(--gray-light);
+  border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.btn-secondary:hover{border-color:var(--teal);color:var(--teal)}
+.content{padding:32px}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{
+  background:white;border:1px solid var(--gray-light);border-radius:12px;padding:20px 22px;
+}
+.stat-label{font-size:12px;color:var(--gray);font-weight:500;margin-bottom:6px}
+.stat-value{font-family:'DM Serif Display',serif;font-size:28px;color:var(--navy);line-height:1}
+.stat-sub{font-size:12px;color:var(--teal);margin-top:4px;font-weight:500}
+
+/* CARDS */
+.card{background:white;border:1px solid var(--gray-light);border-radius:12px;overflow:hidden}
+.card-header{
+  padding:18px 22px;border-bottom:1px solid var(--gray-light);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-size:15px;font-weight:600;color:var(--navy)}
+.card-body{padding:0}
+
+/* REPORTS TABLE */
+.reports-table{width:100%;border-collapse:collapse}
+.reports-table th{
+  text-align:left;padding:12px 22px;font-size:11px;font-weight:600;
+  color:var(--gray);letter-spacing:.5px;text-transform:uppercase;
+  background:var(--off-white);border-bottom:1px solid var(--gray-light);
+}
+.reports-table td{
+  padding:14px 22px;font-size:14px;border-bottom:1px solid var(--gray-light);
+  color:var(--text);
+}
+.reports-table tr:last-child td{border-bottom:none}
+.reports-table tr:hover td{background:var(--off-white)}
+.badge{
+  display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;
+  font-size:11px;font-weight:600;
+}
+.badge-green{background:var(--green-soft);color:var(--green)}
+.badge-amber{background:var(--amber-soft);color:var(--amber)}
+.btn-download{
+  background:transparent;border:1px solid var(--gray-light);color:var(--gray);
+  border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.btn-download:hover{border-color:var(--teal);color:var(--teal)}
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--gray);
+}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty-title{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:6px}
+.empty-sub{font-size:14px;line-height:1.6}
+
+/* SUBMIT FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.form-group{margin-bottom:0}
+.form-group.full{grid-column:1/-1}
+.form-label{
+  display:block;font-size:12px;font-weight:600;color:var(--gray);
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;
+}
+.form-label span{color:var(--red);margin-left:2px}
+.form-input, .form-select, .form-textarea{
+  width:100%;background:white;border:1px solid var(--gray-light);
+  border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);
+  font-family:'DM Sans',sans-serif;transition:border-color .2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus{
+  outline:none;border-color:var(--teal);
+}
+.form-textarea{resize:vertical;min-height:100px}
+.form-section{margin-bottom:28px}
+.form-section-title{
+  font-size:13px;font-weight:600;color:var(--navy);margin-bottom:16px;
+  padding-bottom:8px;border-bottom:1px solid var(--gray-light);
+  display:flex;align-items:center;gap:8px;
+}
+.form-section-title .dot{
+  width:8px;height:8px;border-radius:50%;background:var(--teal);
+}
+.upload-area{
+  border:2px dashed var(--gray-light);border-radius:10px;padding:32px;
+  text-align:center;cursor:pointer;transition:all .2s;
+  background:var(--off-white);
+}
+.upload-area:hover,.upload-area.dragover{border-color:var(--teal);background:var(--teal-lite)}
+.upload-area input{display:none}
+.upload-icon{font-size:28px;margin-bottom:8px;opacity:.5}
+.upload-text{font-size:14px;color:var(--gray)}
+.upload-text strong{color:var(--teal)}
+.upload-hint{font-size:12px;color:var(--gray);margin-top:4px}
+.upload-filename{
+  font-size:13px;color:var(--teal);font-weight:500;margin-top:8px;
+  display:none;
+}
+.optional-toggle{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  font-size:14px;color:var(--gray);margin-bottom:16px;user-select:none;
+}
+.optional-toggle input{cursor:pointer}
+.optional-fields{display:none}
+.optional-fields.show{display:grid}
+.form-submit-row{
+  display:flex;align-items:center;justify-content:flex-end;gap:12px;
+  padding-top:20px;border-top:1px solid var(--gray-light);margin-top:8px;
+}
+.submit-status{
+  font-size:13px;color:var(--gray);display:none;
+}
+.submit-status.loading{color:var(--teal);display:block}
+.submit-status.success{color:var(--green);display:block}
+.submit-status.error{color:var(--red);display:block}
+
+/* SETTINGS */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.color-preview{
+  display:flex;align-items:center;gap:10px;margin-top:8px;
+}
+.color-swatch{
+  width:32px;height:32px;border-radius:6px;border:1px solid var(--gray-light);
+  flex-shrink:0;
+}
+.logo-preview{
+  width:100%;height:80px;background:var(--off-white);border:1px solid var(--gray-light);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  margin-top:8px;overflow:hidden;
+}
+.logo-preview img{max-height:60px;max-width:200px;object-fit:contain}
+.logo-preview-placeholder{font-size:13px;color:var(--gray)}
+.settings-save{
+  display:flex;justify-content:flex-end;margin-top:24px;
+  padding-top:20px;border-top:1px solid var(--gray-light);
+}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--navy);color:white;border-radius:10px;
+  padding:14px 20px;font-size:14px;font-weight:500;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:1000;
+  transform:translateY(100px);opacity:0;transition:all .3s;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+
+/* LOADING */
+.spinner{
+  width:18px;height:18px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;
+  display:none;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MOBILE NAV */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;
+  background:var(--navy);border-top:1px solid rgba(255,255,255,.08);
+  padding:8px 0;z-index:50;
+}
+.mobile-nav-items{display:flex;justify-content:space-around}
+.mobile-nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 16px;cursor:pointer;color:rgba(255,255,255,.4);
+  font-size:10px;font-weight:500;
+}
+.mobile-nav-item.active{color:var(--teal)}
+.mobile-nav-item svg{width:20px;height:20px}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0;padding-bottom:60px}
+  .mobile-nav{display:block}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .form-grid,.settings-grid{grid-template-columns:1fr}
+  .content{padding:20px}
+  .topbar{padding:0 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">FR</div>
+      <span class="auth-logo-text">FinReport<span>AI</span></span>
+    </div>
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-sub">Sign in to your firm's portal to manage reports and settings.</p>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <div id="login-form">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@yourfirm.co.uk" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-auth" onclick="signIn()">
+        <span id="login-text">Sign in</span>
+        <div class="spinner" id="login-spinner"></div>
+      </button>
+      <div class="auth-switch">
+        Don't have an account? <a onclick="showSignup()">Register your firm</a>
+      </div>
+    </div>
+
+    <div id="signup-form" style="display:none">
+      <div class="field">
+        <label>Firm Name</label>
+        <input type="text" id="signup-firm" placeholder="Smith & Co Accountants">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="you@yourfirm.co.uk" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Min. 8 characters" autocomplete="new-password">
+      </div>
+      <button class="btn-auth" onclick="signUp()">
+        <span id="signup-text">Create account</span>
+        <div class="spinner" id="signup-spinner"></div>
+      </button>
+      <div class="auth-switch">
+        Already have an account? <a onclick="showLogin()">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="#">
+      <div class="sidebar-logo-mark">FR</div>
+      <span class="sidebar-logo-text">FinReport<span>AI</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Main</div>
+        <div class="nav-item active" onclick="showPage('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="nav-item" onclick="showPage('reports')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Reports
+        </div>
+        <div class="nav-item" onclick="showPage('submit')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          New Report
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Account</div>
+        <div class="nav-item" onclick="showPage('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="firm-info">
+        <div class="firm-avatar" id="sidebar-avatar">F</div>
+        <div>
+          <div class="firm-name" id="sidebar-firm-name">Your Firm</div>
+          <div class="firm-plan" id="sidebar-plan">Standard Plan</div>
+        </div>
+      </div>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn-primary" onclick="showPage('submit')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Report
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div id="page-dashboard" class="page active">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Reports This Month</div>
+            <div class="stat-value" id="stat-month">—</div>
+            <div class="stat-sub">Current billing period</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Reports</div>
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Clients</div>
+            <div class="stat-value" id="stat-clients">—</div>
+            <div class="stat-sub">Unique businesses</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Latest Report</div>
+            <div class="stat-value" style="font-size:16px;margin-top:4px" id="stat-latest">—</div>
+            <div class="stat-sub" id="stat-latest-sub">No reports yet</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Reports</span>
+            <button class="btn-secondary" onclick="showPage('reports')" style="font-size:13px;padding:7px 14px">View all</button>
+          </div>
+          <div class="card-body">
+            <table class="reports-table" id="dashboard-reports-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Period</th>
+                  <th>Generated</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-reports-body">
+                <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📄</div><div class="empty-title">No reports yet</div><div class="empty-sub">Generate your first report to see it here.</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS PAGE -->
+      <div id="page-reports" class="page">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">All Reports</span>
+            <input class="form-input" style="width:220px;padding:8px 12px;font-size:13px" placeholder="Search by client..." id="reports-search" oninput="filterReports()">
+          </div>
+          <div class="card-body">
+            <table class="reports-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Period</th>
+                  <th>Type</th>
+                  <th>Generated</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="all-reports-body">
+                <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📄</div><div class="empty-title">No reports yet</div><div class="empty-sub">Submit your first report request to get started.</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBMIT PAGE -->
+      <div id="page-submit" class="page">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Generate New Report</span>
+          </div>
+          <div class="card-body" style="padding:24px">
+
+            <div class="form-section">
+              <div class="form-section-title"><div class="dot"></div>Client Details</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Client Business Name <span>*</span></label>
+                  <input class="form-input" id="f-client-name" placeholder="Apex Consulting Ltd">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Report Type <span>*</span></label>
+                  <select class="form-select" id="f-report-type">
+                    <option value="standard">Standard Report</option>
+                    <option value="comparison">Comparison Report (2 periods)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-section-title"><div class="dot"></div>Financial Data</div>
+              <div class="form-group full" style="margin-bottom:16px">
+                <label class="form-label">P&L CSV File <span>*</span></label>
+                <div class="upload-area" id="upload-area-1" onclick="document.getElementById('csv-file-1').click()" ondragover="handleDrag(event,'upload-area-1')" ondragleave="handleDragLeave('upload-area-1')" ondrop="handleDrop(event,'csv-file-1','upload-area-1','upload-name-1')">
+                  <input type="file" id="csv-file-1" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(this,'upload-name-1')">
+                  <div class="upload-icon">📊</div>
+                  <div class="upload-text"><strong>Click to upload</strong> or drag & drop</div>
+                  <div class="upload-hint">CSV, XLS or XLSX · Exported from Xero, QuickBooks, Sage or Excel</div>
+                  <div class="upload-filename" id="upload-name-1"></div>
+                </div>
+              </div>
+              <div id="second-csv-wrapper" style="display:none" class="form-group full">
+                <label class="form-label">Comparison Period CSV <span>*</span></label>
+                <div class="upload-area" id="upload-area-2" onclick="document.getElementById('csv-file-2').click()" ondragover="handleDrag(event,'upload-area-2')" ondragleave="handleDragLeave('upload-area-2')" ondrop="handleDrop(event,'csv-file-2','upload-area-2','upload-name-2')">
+                  <input type="file" id="csv-file-2" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(this,'upload-name-2')">
+                  <div class="upload-icon">📊</div>
+                  <div class="upload-text"><strong>Click to upload</strong> or drag & drop</div>
+                  <div class="upload-hint">Prior period data for comparison</div>
+                  <div class="upload-filename" id="upload-name-2"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-section-title"><div class="dot"></div>Additional Context</div>
+              <div class="form-group full">
+                <label class="form-label">Notes for Claude</label>
+                <textarea class="form-textarea" id="f-context" placeholder="Any additional context about the business, unusual items, or specific things to highlight..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <label class="optional-toggle">
+                <input type="checkbox" id="show-advanced" onchange="toggleAdvanced()">
+                Include additional data (cash flow, balance sheet, targets)
+              </label>
+              <div class="optional-fields form-grid" id="advanced-fields">
+                <div class="form-group">
+                  <label class="form-label">Cash: Operating Activities</label>
+                  <input class="form-input" id="f-cash-op" type="number" placeholder="52000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cash: Investing Activities</label>
+                  <input class="form-input" id="f-cash-inv" type="number" placeholder="-8000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cash: Financing Activities</label>
+                  <input class="form-input" id="f-cash-fin" type="number" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Total Assets</label>
+                  <input class="form-input" id="f-assets" type="number" placeholder="185000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Current Assets</label>
+                  <input class="form-input" id="f-curr-assets" type="number" placeholder="120000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Total Liabilities</label>
+                  <input class="form-input" id="f-liab" type="number" placeholder="45000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Current Liabilities</label>
+                  <input class="form-input" id="f-curr-liab" type="number" placeholder="28000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Total Equity</label>
+                  <input class="form-input" id="f-equity" type="number" placeholder="140000">
+                </div>
+                <div class="form-group full">
+                  <label class="form-label">Accountant's Notes</label>
+                  <textarea class="form-textarea" id="f-notes" style="min-height:80px" placeholder="Notes that will appear in the report..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Client Logo URL</label>
+                  <input class="form-input" id="f-client-logo" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Client Accent Colour</label>
+                  <input class="form-input" id="f-client-accent" placeholder="#0E8A7A">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-submit-row">
+              <div class="submit-status" id="submit-status"></div>
+              <button class="btn-secondary" onclick="showPage('dashboard')">Cancel</button>
+              <button class="btn-primary" id="submit-btn" onclick="submitReport()">
+                <span id="submit-text">Generate Report</span>
+                <div class="spinner" id="submit-spinner"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div id="page-settings" class="page">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><span class="card-title">Firm Branding</span></div>
+          <div class="card-body" style="padding:24px">
+            <div class="settings-grid">
+              <div class="form-group">
+                <label class="form-label">Firm Name</label>
+                <input class="form-input" id="s-firm-name" placeholder="Smith & Co Accountants">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tagline</label>
+                <input class="form-input" id="s-tagline" placeholder="Chartered Accountants & Business Advisors">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact Details</label>
+                <input class="form-input" id="s-contact" placeholder="020 7123 4567 · smithandco.co.uk">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Logo URL</label>
+                <input class="form-input" id="s-logo" placeholder="https://..." oninput="previewLogo()">
+                <div class="logo-preview" id="logo-preview">
+                  <span class="logo-preview-placeholder">Logo preview</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Primary Colour</label>
+                <input class="form-input" id="s-primary" placeholder="#0F1F3D" oninput="previewColour('s-primary','swatch-primary')">
+                <div class="color-preview">
+                  <div class="color-swatch" id="swatch-primary" style="background:#0F1F3D"></div>
+                  <span style="font-size:13px;color:var(--gray)">Cover page & headers</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Accent Colour</label>
+                <input class="form-input" id="s-accent" placeholder="#0E8A7A" oninput="previewColour('s-accent','swatch-accent')">
+                <div class="color-preview">
+                  <div class="color-swatch" id="swatch-accent" style="background:#0E8A7A"></div>
+                  <span style="font-size:13px;color:var(--gray)">Section headers & highlights</span>
+                </div>
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Disclaimer</label>
+                <textarea class="form-textarea" id="s-disclaimer" style="min-height:70px" placeholder="This report has been prepared for management purposes only..."></textarea>
+              </div>
+            </div>
+            <div class="settings-save">
+              <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Account</span></div>
+          <div class="card-body" style="padding:24px">
+            <div class="settings-grid">
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="form-input" id="s-email" disabled style="background:var(--off-white);color:var(--gray)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Plan</label>
+                <input class="form-input" id="s-plan" disabled style="background:var(--off-white);color:var(--gray)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <!-- Mobile nav -->
+  <nav class="mobile-nav">
+    <div class="mobile-nav-items">
+      <div class="mobile-nav-item active" onclick="showPage('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="mobile-nav-item" onclick="showPage('reports')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Reports
+      </div>
+      <div class="mobile-nav-item" onclick="showPage('submit')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        New
+      </div>
+      <div class="mobile-nav-item" onclick="showPage('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+  </nav>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG — replace these with your actual values ──────────────────────────
+const SUPABASE_URL = 'https://nhoxoeqsgzxdaauhgyzs.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ob3hvZXFzZ3p4ZGFhdWhneXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTkyMDcsImV4cCI6MjA5NTI3NTIwN30.sgjMGkQtEhWrI6oFHLkwTFo1zwBuSLrHGKc6wW6M190';
+const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/rivovy5izuvr2richq8x4euyew2h8y37';
+// ────────────────────────────────────────────────────────────────────────────
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+let currentFirm = null;
+let allReports = [];
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadFirm();
+    showApp();
+  }
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
+      await loadFirm();
+      showApp();
+    }
+    if (event === 'SIGNED_OUT') {
+      showAuth();
+    }
+  });
+
+  // Report type toggle
+  document.getElementById('f-report-type').addEventListener('change', e => {
+    document.getElementById('second-csv-wrapper').style.display =
+      e.target.value === 'comparison' ? 'block' : 'none';
+  });
+});
+
+// ── AUTH ──────────────────────────────────────────────────────────────────
+window.showLogin = function() {
+  document.getElementById('login-form').style.display = 'block';
+  document.getElementById('signup-form').style.display = 'none';
+  document.getElementById('auth-error').style.display = 'none';
+}
+window.showSignup = function() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('signup-form').style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+window.signIn = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
+  setAuthLoading(true, 'login');
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  setAuthLoading(false, 'login');
+  if (error) showAuthError(error.message);
+}
+
+window.signUp = async function() {
+  const firm = document.getElementById('signup-firm').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  if (!firm || !email || !password) { showAuthError('Please fill in all fields.'); return; }
+  if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+  setAuthLoading(true, 'signup');
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if (error) { setAuthLoading(false, 'signup'); showAuthError(error.message); return; }
+  // Create firm record
+  if (data.user) {
+    await sb.from('firms').insert({
+      id: data.user.id,
+      email: email,
+      firm_name: firm,
+      plan: 'standard',
+    });
+  }
+  setAuthLoading(false, 'signup');
+  showAuthError('Account created! Check your email to confirm, then sign in.', 'success');
+}
+
+window.signOut = async function() {
+  await sb.auth.signOut();
+}
+
+window.showAuthError = function(msg, type = 'error') {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type === 'success' ? 'var(--green-soft)' : 'var(--red-soft)';
+  el.style.color = type === 'success' ? 'var(--green)' : 'var(--red)';
+}
+
+window.setAuthLoading = function(loading, form) {
+  document.getElementById(`${form}-text`).style.opacity = loading ? 0 : 1;
+  document.getElementById(`${form}-spinner`).style.display = loading ? 'inline-block' : 'none';
+}
+
+// ── FIRM DATA ─────────────────────────────────────────────────────────────
+window.loadFirm = async function() {
+  const { data } = await sb.from('firms').select('*').eq('id', currentUser.id).single();
+  currentFirm = data;
+  if (currentFirm) {
+    document.getElementById('sidebar-firm-name').textContent = currentFirm.firm_name || 'Your Firm';
+    document.getElementById('sidebar-avatar').textContent = (currentFirm.firm_name || 'F')[0].toUpperCase();
+    document.getElementById('sidebar-plan').textContent =
+      currentFirm.plan === 'white_label' ? 'White Label' :
+      currentFirm.plan === 'white_label_pro' ? 'White Label Pro' : 'Standard';
+    populateSettings();
+  }
+  await loadReports();
+}
+
+window.loadReports = async function() {
+  const { data } = await sb.from('reports')
+    .select('*')
+    .eq('firm_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  allReports = data || [];
+  renderReports();
+  renderDashboardStats();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+window.renderDashboardStats = function() {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonth = allReports.filter(r => new Date(r.created_at) >= monthStart);
+  const clients = new Set(allReports.map(r => r.client_name)).size;
+
+  document.getElementById('stat-month').textContent = thisMonth.length;
+  document.getElementById('stat-total').textContent = allReports.length;
+  document.getElementById('stat-clients').textContent = clients;
+
+  if (allReports.length > 0) {
+    const latest = allReports[0];
+    document.getElementById('stat-latest').textContent = latest.client_name;
+    document.getElementById('stat-latest-sub').textContent = formatDate(latest.created_at);
+  }
+
+  renderReportRows('dashboard-reports-body', allReports.slice(0, 5), false);
+}
+
+window.renderReports = function() {
+  renderReportRows('all-reports-body', allReports, true);
+}
+
+window.renderReportRows = function(tbodyId, reports, showType) {
+  const tbody = document.getElementById(tbodyId);
+  if (!reports.length) {
+    tbody.innerHTML = `<tr><td colspan="${showType?6:5}"><div class="empty-state"><div class="empty-icon">📄</div><div class="empty-title">No reports yet</div><div class="empty-sub">Generate your first report to see it here.</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = reports.map(r => `
+    <tr>
+      <td style="font-weight:500">${r.client_name}</td>
+      <td style="color:var(--gray)">${r.period || '—'}</td>
+      ${showType ? `<td><span class="badge ${r.report_type==='comparison'?'badge-amber':'badge-green'}">${r.report_type==='comparison'?'Comparison':'Standard'}</span></td>` : ''}
+      <td style="color:var(--gray)">${formatDate(r.created_at)}</td>
+      <td>${isDelivered(r) ? '<span class="badge badge-green">Delivered</span>' : '<span class="badge badge-amber">Processing</span>'}</td>
+      <td>
+        ${isDelivered(r) ? '<span style="font-size:12px;color:var(--gray)">Email delivered</span>' : '<span style="font-size:12px;color:var(--gray)">In progress...</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.filterReports = function() {
+  const q = document.getElementById('reports-search').value.toLowerCase();
+  const filtered = allReports.filter(r => r.client_name.toLowerCase().includes(q));
+  renderReportRows('all-reports-body', filtered, true);
+}
+
+window.downloadReport = function(url, clientName) {
+  const a = document.createElement('a');
+  a.href = url; a.download = clientName + '_report.pdf'; a.target = '_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ── SUBMIT REPORT ──────────────────────────────────────────────────────────
+window.submitReport = async function() {
+  const clientName = document.getElementById('f-client-name').value.trim();
+  const csvFile = document.getElementById('csv-file-1').files[0];
+  const reportType = document.getElementById('f-report-type').value;
+
+  if (!clientName) { showToast('Please enter a client name.', 'error'); return; }
+  if (!csvFile) { showToast('Please upload a CSV file.', 'error'); return; }
+  if (reportType === 'comparison' && !document.getElementById('csv-file-2').files[0]) {
+    showToast('Please upload the comparison period CSV.', 'error'); return;
+  }
+
+  setSubmitLoading(true);
+  document.getElementById('submit-status').className = 'submit-status loading';
+  document.getElementById('submit-status').textContent = 'Uploading data and generating report...';
+
+  try {
+    // Read CSV as text
+    const csvRaw = await readFile(csvFile);
+    const csvText = csvRaw.replace(/[\r\n]+/g, ' | ').replace(/\t/g, ', ').replace(/"/g, "'");
+    let csv2Text = '';
+    if (reportType === 'comparison') {
+      const csv2Raw = await readFile(document.getElementById('csv-file-2').files[0]);
+      csv2Text = csv2Raw.replace(/[\r\n]+/g, ' | ').replace(/\t/g, ', ').replace(/"/g, "'");
+    }
+
+    // Build payload — mirrors existing Make webhook structure
+    const payload = {
+      client_business_name: clientName,
+      report_type: reportType,
+      csv_data: csvText,
+      csv_data_2: csv2Text,
+      additional_context: document.getElementById('f-context').value,
+      firm_id: currentUser.id,
+      // Branding from firm settings
+      white_label_firm: currentFirm?.firm_name || '',
+      white_label_logo: currentFirm?.logo_url || '',
+      white_label_primary_colour: currentFirm?.primary_colour || '',
+      white_label_accent_colour: currentFirm?.accent_colour || '',
+      white_label_tagline: currentFirm?.tagline || '',
+      white_label_contact: currentFirm?.contact || '',
+      white_label_disclaimer: currentFirm?.disclaimer || '',
+      // Advanced fields
+      cash_operating: document.getElementById('f-cash-op').value || '',
+      cash_investing: document.getElementById('f-cash-inv').value || '',
+      cash_financing: document.getElementById('f-cash-fin').value || '',
+      total_assets: document.getElementById('f-assets').value || '',
+      current_assets: document.getElementById('f-curr-assets').value || '',
+      total_liabilities: document.getElementById('f-liab').value || '',
+      current_liabilities: document.getElementById('f-curr-liab').value || '',
+      total_equity: document.getElementById('f-equity').value || '',
+      accountant_notes: document.getElementById('f-notes').value || '',
+      firm_email: currentUser.email,
+      client_logo: document.getElementById('f-client-logo').value || '',
+      client_accent_colour: document.getElementById('f-client-accent').value || '',
+      // Portal flag so Make can store report back in Supabase
+      portal_submission: true,
+      portal_firm_id: currentUser.id,
+      portal_client_name: clientName,
+    };
+
+    // Save pending report record to Supabase (non-blocking)
+    let reportRecordId = null;
+    try {
+      const { data: reportRecord, error: insertError } = await Promise.race([
+        sb.from('reports').insert({
+          firm_id: currentUser.id,
+          client_name: clientName,
+          period: '',
+          report_type: reportType,
+          status: 'processing',
+          pdf_url: null,
+        }).select().single(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+      ]);
+      if (insertError) console.error('Supabase insert error:', insertError);
+      if (reportRecord) reportRecordId = reportRecord.id;
+    } catch(e) {
+      console.error('Insert failed or timed out:', e);
+    }
+    payload.portal_report_id = reportRecordId;
+
+    // Fire Make webhook — fire and forget
+    fetch(MAKE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+
+    setSubmitLoading(false);
+    document.getElementById('submit-status').className = 'submit-status success';
+    document.getElementById('submit-status').textContent = '✓ Report submitted — you\'ll receive it by email within 15 minutes.';
+    showToast('Report submitted successfully!', 'success');
+
+    // Reset form
+    setTimeout(() => {
+      document.getElementById('f-client-name').value = '';
+      const f1 = document.getElementById('csv-file-1');
+      f1.value = ''; if(f1.value) f1.type='text', f1.type='file';
+      const f2 = document.getElementById('csv-file-2');
+      f2.value = ''; if(f2.value) f2.type='text', f2.type='file';
+      document.getElementById('upload-name-1').style.display = 'none';
+      document.getElementById('upload-name-2').style.display = 'none';
+      document.getElementById('f-context').value = '';
+      document.getElementById('f-notes').value = '';
+      document.getElementById('submit-status').className = 'submit-status';
+      document.getElementById('submit-status').textContent = '';
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('submit-text').style.opacity = 1;
+      document.getElementById('submit-spinner').style.display = 'none';
+      loadReports();
+    }, 3000);
+
+  } catch (err) {
+    setSubmitLoading(false);
+    document.getElementById('submit-status').className = 'submit-status error';
+    document.getElementById('submit-status').textContent = 'Something went wrong. Please try again.';
+    console.error(err);
+  }
+}
+
+window.setSubmitLoading = function(loading) {
+  document.getElementById('submit-text').style.opacity = loading ? 0 : 1;
+  document.getElementById('submit-spinner').style.display = loading ? 'inline-block' : 'none';
+  document.getElementById('submit-btn').disabled = loading;
+}
+
+window.readFile = function(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.onerror = rej;
+    reader.readAsText(file);
+  });
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+window.populateSettings = function() {
+  if (!currentFirm) return;
+  document.getElementById('s-firm-name').value = currentFirm.firm_name || '';
+  document.getElementById('s-tagline').value = currentFirm.tagline || '';
+  document.getElementById('s-contact').value = currentFirm.contact || '';
+  document.getElementById('s-logo').value = currentFirm.logo_url || '';
+  document.getElementById('s-primary').value = currentFirm.primary_colour || '';
+  document.getElementById('s-accent').value = currentFirm.accent_colour || '';
+  document.getElementById('s-disclaimer').value = currentFirm.disclaimer || '';
+  document.getElementById('s-email').value = currentUser.email || '';
+  document.getElementById('s-plan').value =
+    currentFirm.plan === 'white_label' ? 'White Label — £499/mo' :
+    currentFirm.plan === 'white_label_pro' ? 'White Label Pro — £799/mo' : 'Standard — £299/mo';
+  if (currentFirm.primary_colour) document.getElementById('swatch-primary').style.background = currentFirm.primary_colour;
+  if (currentFirm.accent_colour)  document.getElementById('swatch-accent').style.background  = currentFirm.accent_colour;
+  if (currentFirm.logo_url) previewLogo();
+}
+
+window.saveSettings = async function() {
+  const updates = {
+    firm_name:      document.getElementById('s-firm-name').value.trim(),
+    tagline:        document.getElementById('s-tagline').value.trim(),
+    contact:        document.getElementById('s-contact').value.trim(),
+    logo_url:       document.getElementById('s-logo').value.trim(),
+    primary_colour: document.getElementById('s-primary').value.trim(),
+    accent_colour:  document.getElementById('s-accent').value.trim(),
+    disclaimer:     document.getElementById('s-disclaimer').value.trim(),
+  };
+  const { error } = await sb.from('firms').update(updates).eq('id', currentUser.id);
+  if (error) { showToast('Failed to save settings.', 'error'); return; }
+  currentFirm = { ...currentFirm, ...updates };
+  document.getElementById('sidebar-firm-name').textContent = updates.firm_name || 'Your Firm';
+  document.getElementById('sidebar-avatar').textContent = (updates.firm_name || 'F')[0].toUpperCase();
+  showToast('Settings saved.', 'success');
+}
+
+window.previewColour = function(inputId, swatchId) {
+  const val = document.getElementById(inputId).value.trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+    document.getElementById(swatchId).style.background = val;
+  }
+}
+
+window.previewLogo = function() {
+  const url = document.getElementById('s-logo').value.trim();
+  const preview = document.getElementById('logo-preview');
+  if (url) {
+    preview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='<span class=logo-preview-placeholder>Could not load image</span>'">`;
+  } else {
+    preview.innerHTML = '<span class="logo-preview-placeholder">Logo preview</span>';
+  }
+}
+
+// ── FILE UPLOAD UX ─────────────────────────────────────────────────────────
+window.handleFileSelect = function(input, nameId) {
+  if (input.files[0]) {
+    const el = document.getElementById(nameId);
+    el.textContent = '✓ ' + input.files[0].name;
+    el.style.display = 'block';
+  }
+}
+window.handleDrag = function(e, areaId) {
+  e.preventDefault();
+  document.getElementById(areaId).classList.add('dragover');
+}
+window.handleDragLeave = function(areaId) {
+  document.getElementById(areaId).classList.remove('dragover');
+}
+window.handleDrop = function(e, inputId, areaId, nameId) {
+  e.preventDefault();
+  document.getElementById(areaId).classList.remove('dragover');
+  const input = document.getElementById(inputId);
+  input.files = e.dataTransfer.files;
+  handleFileSelect(input, nameId);
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+window.showPage = function(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+
+  const titles = { dashboard:'Dashboard', reports:'All Reports', submit:'New Report', settings:'Settings' };
+  document.getElementById('page-title').textContent = titles[name] || '';
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(name)) n.classList.add('active');
+  });
+  document.querySelectorAll('.mobile-nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(name)) n.classList.add('active');
+  });
+
+  if (name === 'reports') loadReports();
+}
+
+window.showApp = function() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+window.showAuth = function() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  currentUser = null; currentFirm = null;
+}
+
+window.toggleAdvanced = function() {
+  const fields = document.getElementById('advanced-fields');
+  fields.classList.toggle('show', document.getElementById('show-advanced').checked);
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+window.isDelivered = function(r) {
+  if (r.status === 'delivered') return true;
+  const created = new Date(r.created_at);
+  const mins = (Date.now() - created.getTime()) / 60000;
+  return mins > 20;
+}
+
+window.formatDate = function(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+window.showToast = function(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
