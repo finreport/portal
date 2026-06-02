@@ -908,6 +908,10 @@ window.renderReportRows = function(tbodyId, reports, showType) {
       <td>${isDelivered(r) ? '<span class="badge badge-green">Delivered</span>' : '<span class="badge badge-amber">Processing</span>'}</td>
       <td>
         ${isDelivered(r) ? '<span style="font-size:12px;color:var(--gray)">Email delivered</span>' : '<span style="font-size:12px;color:var(--gray)">In progress...</span>'}
+        ${r.pdf_url ? `<button class="btn-download" onclick="downloadReport('${r.pdf_url}','${r.client_name}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -986,26 +990,8 @@ window.submitReport = async function() {
       portal_client_name: clientName,
     };
 
-    // Save pending report record to Supabase (non-blocking)
-    let reportRecordId = null;
-    try {
-      const { data: reportRecord, error: insertError } = await Promise.race([
-        sb.from('reports').insert({
-          firm_id: currentUser.id,
-          client_name: clientName,
-          period: '',
-          report_type: reportType,
-          status: 'processing',
-          pdf_url: null,
-        }).select().single(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
-      ]);
-      if (insertError) console.error('Supabase insert error:', insertError);
-      if (reportRecord) reportRecordId = reportRecord.id;
-    } catch(e) {
-      console.error('Insert failed or timed out:', e);
-    }
-    payload.portal_report_id = reportRecordId;
+    // Report record created by Make after webhook fires
+    payload.portal_report_id = null;
 
     // Fire Make webhook — fire and forget
     fetch(MAKE_WEBHOOK_URL, {
