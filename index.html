@@ -501,16 +501,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
         <div class="card">
           <div class="card-header">
             <span class="card-title">All Reports</span>
-            <input class="form-input" style="width:220px;padding:8px 12px;font-size:13px" placeholder="Search by client..." id="reports-search" oninput="filterReports()">
+            <input class="form-input" style="width:220px;padding:8px 12px;font-size:13px" placeholder="Search client, period, date..." id="reports-search" oninput="filterReports()">
           </div>
           <div class="card-body">
             <table class="reports-table">
               <thead>
                 <tr>
-                  <th>Client</th>
-                  <th>Period</th>
+                  <th style="cursor:pointer" onclick="sortReports('client_name')">Client ↕</th>
+                  <th style="cursor:pointer" onclick="sortReports('period')">Period ↕</th>
                   <th>Type</th>
-                  <th>Generated</th>
+                  <th style="cursor:pointer" onclick="sortReports('created_at')">Generated ↕</th>
                   <th>Status</th>
                   <th></th>
                 </tr>
@@ -854,7 +854,28 @@ window.loadFirm = async function() {
     document.getElementById('sidebar-plan').textContent =
       currentFirm.plan === 'white_label' ? 'White Label' :
       currentFirm.plan === 'white_label_pro' ? 'White Label Pro' : 'Standard';
-    populateSettings();
+
+    // ── Plan gating ───────────────────────────────────────────────────────
+    const isWhiteLabel = currentFirm.plan === 'white_label' || currentFirm.plan === 'white_label_pro';
+    if (!isWhiteLabel) {
+      // Hide reports and settings nav items
+      document.querySelectorAll('.nav-item').forEach(n => {
+        if (n.getAttribute('onclick')?.includes('reports') || n.getAttribute('onclick')?.includes('settings')) {
+          n.style.display = 'none';
+        }
+      });
+      document.querySelectorAll('.mobile-nav-item').forEach(n => {
+        if (n.getAttribute('onclick')?.includes('reports') || n.getAttribute('onclick')?.includes('settings')) {
+          n.style.display = 'none';
+        }
+      });
+      // Hide topbar New Report button — standard users only see submit page
+      document.querySelector('.topbar-actions').style.display = 'none';
+      // Go straight to submit page
+      showPage('submit');
+    } else {
+      populateSettings();
+    }
   }
   await loadReports();
 }
@@ -867,6 +888,27 @@ window.loadReports = async function() {
   allReports = data || [];
   renderReports();
   renderDashboardStats();
+
+  // Auto-refresh if any reports are still processing
+  const hasProcessing = allReports.some(r => !isDelivered(r));
+  if (hasProcessing) {
+    clearTimeout(window._refreshTimer);
+    window._refreshTimer = setTimeout(() => loadReports(), 30000);
+  }
+}
+
+// Sort state
+let sortField = 'created_at';
+let sortAsc = false;
+
+window.sortReports = function(field) {
+  if (sortField === field) sortAsc = !sortAsc;
+  else { sortField = field; sortAsc = false; }
+  renderReports();
+}
+
+window.filterReports = function() {
+  renderReports();
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
@@ -917,9 +959,23 @@ window.renderReportRows = function(tbodyId, reports, showType) {
   `).join('');
 }
 
-window.filterReports = function() {
-  const q = document.getElementById('reports-search').value.toLowerCase();
-  const filtered = allReports.filter(r => r.client_name.toLowerCase().includes(q));
+window.renderReports = function() {
+  let filtered = [...allReports];
+
+  // Search by client name or date
+  const q = (document.getElementById('reports-search')?.value || '').toLowerCase();
+  if (q) filtered = filtered.filter(r =>
+    r.client_name?.toLowerCase().includes(q) ||
+    r.period?.toLowerCase().includes(q) ||
+    formatDate(r.created_at).toLowerCase().includes(q)
+  );
+
+  // Sort
+  filtered.sort((a, b) => {
+    let av = a[sortField] || ''; let bv = b[sortField] || '';
+    return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
   renderReportRows('all-reports-body', filtered, true);
 }
 
