@@ -1004,11 +1004,11 @@ window.submitReport = async function() {
   try {
     // Read CSV as text
     const csvRaw = await readFile(csvFile);
-    const csvText = csvRaw.replace(/[\r\n]+/g, ' | ').replace(/\t/g, ', ').replace(/"/g, "'");
+    const csvText = csvRaw;
     let csv2Text = '';
     if (reportType === 'comparison') {
       const csv2Raw = await readFile(document.getElementById('csv-file-2').files[0]);
-      csv2Text = csv2Raw.replace(/[\r\n]+/g, ' | ').replace(/\t/g, ', ').replace(/"/g, "'");
+      csv2Text = csv2Raw;
     }
 
     // Build payload — mirrors existing Make webhook structure
