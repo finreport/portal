@@ -80,6 +80,57 @@ button{cursor:pointer;font-family:inherit}
 .auth-switch a{color:var(--teal);cursor:pointer}
 .auth-switch a:hover{color:var(--teal-light)}
 
+/* ── PENDING ACTIVATION SCREEN ── */
+#pending-screen{
+  display:none;min-height:100vh;background:var(--navy);
+  align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+#pending-screen.show{display:flex}
+#pending-screen::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(14,138,122,.18) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 80%,rgba(201,168,76,.08) 0%,transparent 60%);
+  pointer-events:none;
+}
+.pending-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:48px 40px;width:100%;max-width:460px;
+  backdrop-filter:blur(20px);position:relative;z-index:1;
+  box-shadow:0 24px 64px rgba(0,0,0,.4);text-align:center;
+}
+.pending-icon{
+  width:56px;height:56px;
+  background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.05));
+  border:1px solid rgba(201,168,76,.25);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 24px;font-size:24px;
+}
+.pending-title{
+  font-family:'DM Serif Display',serif;font-size:24px;color:white;
+  margin-bottom:14px;line-height:1.25;
+}
+.pending-sub{
+  font-size:14px;color:rgba(255,255,255,.5);line-height:1.7;
+  margin-bottom:28px;
+}
+.pending-sub a{color:var(--teal);text-decoration:none}
+.pending-sub a:hover{color:var(--teal-light);text-decoration:underline}
+.pending-email{
+  display:inline-block;background:rgba(14,138,122,.12);
+  border:1px solid rgba(14,138,122,.2);border-radius:6px;
+  padding:3px 10px;color:var(--teal);font-size:13px;font-weight:500;
+  margin:2px 0;word-break:break-all;
+}
+.btn-pending-signout{
+  width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.7);border-radius:8px;padding:13px;
+  font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .2s;
+}
+.btn-pending-signout:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22);color:white}
+
 /* ── APP SHELL ── */
 #app{display:none;min-height:100vh}
 
@@ -727,6 +778,26 @@ button{cursor:pointer;font-family:inherit}
   </div>
 </div>
 
+<!-- ══ PENDING ACTIVATION SCREEN ══ -->
+<div id="pending-screen">
+  <div class="pending-card">
+    <div class="auth-logo" style="justify-content:center;margin-bottom:28px">
+      <div class="auth-logo-mark">FR</div>
+      <span class="auth-logo-text">FinReport<span>AI</span></span>
+    </div>
+    <div class="pending-icon">⏳</div>
+    <h1 class="pending-title">Account Pending Activation</h1>
+    <p class="pending-sub">
+      Your account is being reviewed. You'll receive an email at<br>
+      <span class="pending-email" id="pending-email">your registered address</span><br>
+      once activated.<br><br>
+      If you have any questions, contact<br>
+      <a href="mailto:reports@finreportai.co.uk">reports@finreportai.co.uk</a>
+    </p>
+    <button class="btn-pending-signout" onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
 <!-- ══ APP ══ -->
 <div id="app">
   <aside class="sidebar">
@@ -1357,6 +1428,18 @@ window.setAuthLoading = function(loading, form) {
 window.loadFirm = async function() {
   const { data } = await sb.from('firms').select('*').eq('id', currentUser.id).single();
   currentFirm = data;
+
+  // ── ACTIVATION GATE ───────────────────────────────────────────────────
+  if (currentFirm && currentFirm.active === false) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('pending-email').textContent = currentUser.email || 'your registered address';
+    document.getElementById('pending-screen').classList.add('show');
+    return; // stop — do not load portal content
+  }
+  document.getElementById('pending-screen').classList.remove('show');
+  // ─────────────────────────────────────────────────────────────────────
+
   if (currentFirm) {
     document.getElementById('sidebar-firm-name').textContent = currentFirm.firm_name || 'Your Firm';
     document.getElementById('sidebar-avatar').textContent = (currentFirm.firm_name || 'F')[0].toUpperCase();
@@ -1943,6 +2026,7 @@ window.showApp = function() {
 window.showAuth = function() {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+  document.getElementById('pending-screen').classList.remove('show');
   currentUser = null; currentFirm = null; allReports = []; notifications = [];
   clearTimeout(_idleWarnT); clearTimeout(_idleOutT); clearInterval(_warnCdI);
   document.getElementById('session-modal-overlay')?.classList.remove('open');
