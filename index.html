@@ -658,11 +658,13 @@ button{cursor:pointer;font-family:inherit}
 }
 
 /* ── MOBILE SWIPE ── */
+.swipe-dl-reveal{display:none}
 @media(max-width:768px){
   .swipe-dl-cell{position:relative;overflow:hidden;min-width:72px}
   .swipe-dl-reveal{
+    display:flex;
     position:absolute;inset:0;
-    background:var(--teal);display:flex;align-items:center;justify-content:center;
+    background:var(--teal);align-items:center;justify-content:center;
     transform:translateX(110%);transition:transform .25s cubic-bezier(.4,0,.2,1);
   }
   .reports-table tr.row-swiped .swipe-dl-reveal{transform:translateX(0)}
