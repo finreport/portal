@@ -727,6 +727,147 @@ button{cursor:pointer;font-family:inherit}
   .swipe-hint{font-size:10.5px;color:var(--gray);padding:4px 22px 0;display:block}
 }
 @media(min-width:769px){.swipe-hint{display:none}}
+
+/* ── AI CHAT WIDGET ── */
+.chat-trigger{
+  position:fixed;bottom:24px;right:24px;
+  width:54px;height:54px;border-radius:50%;
+  background:var(--navy);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(15,31,61,.35);
+  z-index:500;transition:transform .18s,box-shadow .18s;
+}
+.chat-trigger:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(15,31,61,.45)}
+.chat-trigger svg{color:var(--teal);pointer-events:none}
+.chat-trigger-pulse{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid var(--teal);opacity:0;
+  animation:chatPulse 2.8s ease-out infinite;pointer-events:none;
+}
+@keyframes chatPulse{
+  0%{transform:scale(.9);opacity:.65}
+  70%{transform:scale(1.35);opacity:0}
+  100%{opacity:0}
+}
+.chat-dot{
+  position:absolute;top:4px;right:4px;
+  width:11px;height:11px;border-radius:50%;
+  background:var(--teal);border:2px solid white;
+  display:none;pointer-events:none;
+}
+.chat-dot.active{display:block}
+.chat-trigger-tip{
+  position:absolute;right:calc(100% + 10px);top:50%;
+  transform:translateY(-50%);
+  background:var(--navy);color:white;font-size:12px;
+  font-family:'DM Sans',sans-serif;white-space:nowrap;
+  padding:5px 10px;border-radius:6px;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+  pointer-events:none;opacity:0;transition:opacity .15s;
+}
+.chat-trigger-tip::after{
+  content:'';position:absolute;left:100%;top:50%;
+  transform:translateY(-50%);
+  border:5px solid transparent;border-left-color:var(--navy);
+}
+.chat-trigger:hover .chat-trigger-tip{opacity:1}
+.chat-window{
+  position:fixed;bottom:90px;right:24px;
+  width:380px;height:520px;
+  background:white;border-radius:16px;
+  box-shadow:0 8px 40px rgba(15,31,61,.22);
+  display:flex;flex-direction:column;overflow:hidden;
+  z-index:501;
+  transform:translateY(20px) scale(.97);opacity:0;
+  pointer-events:none;
+  transition:transform .22s cubic-bezier(.4,0,.2,1),opacity .22s;
+}
+.chat-window.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all}
+.chat-head{
+  background:var(--navy);color:white;
+  padding:14px 16px;display:flex;align-items:center;
+  gap:10px;flex-shrink:0;
+}
+.chat-head-icon{
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(14,138,122,.22);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.chat-head-title{font-size:14px;font-weight:600;flex:1}
+.chat-beta{
+  background:var(--gold);color:var(--navy);
+  font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:20px;letter-spacing:.04em;
+}
+.chat-close{
+  background:none;border:none;color:rgba(255,255,255,.7);
+  cursor:pointer;font-size:18px;line-height:1;
+  padding:2px 6px;border-radius:4px;transition:color .15s;
+}
+.chat-close:hover{color:white}
+.chat-messages{
+  flex:1;overflow-y:auto;padding:14px 14px 8px;
+  display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;
+}
+.chat-msg{
+  max-width:82%;font-size:13.5px;line-height:1.55;
+  padding:9px 13px;border-radius:12px;word-break:break-word;
+}
+.chat-msg.assistant{
+  background:#E8F5F3;color:var(--navy);
+  border-bottom-left-radius:3px;align-self:flex-start;
+}
+.chat-msg.user{
+  background:#EEF2FF;color:var(--navy);
+  border-bottom-right-radius:3px;align-self:flex-end;
+}
+.chat-typing{
+  display:flex;gap:5px;align-items:center;
+  padding:10px 13px;background:#E8F5F3;
+  border-radius:12px;border-bottom-left-radius:3px;
+  width:fit-content;align-self:flex-start;
+}
+.chat-typing-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--teal);
+  animation:chatDot .9s ease-in-out infinite;
+}
+.chat-typing-dot:nth-child(2){animation-delay:.15s}
+.chat-typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes chatDot{
+  0%,60%,100%{transform:translateY(0);opacity:.5}
+  30%{transform:translateY(-5px);opacity:1}
+}
+.chat-foot{
+  border-top:1px solid var(--gray-light);
+  padding:10px 12px;display:flex;gap:8px;
+  align-items:flex-end;flex-shrink:0;
+}
+.chat-input{
+  flex:1;border:1.5px solid var(--gray-light);
+  border-radius:10px;padding:9px 12px;
+  font-size:13.5px;font-family:'DM Sans',sans-serif;
+  color:var(--navy);resize:none;max-height:90px;overflow-y:auto;
+  outline:none;transition:border-color .15s;line-height:1.45;background:white;
+}
+.chat-input:focus{border-color:var(--teal)}
+.chat-input::placeholder{color:#9CA3AF}
+.chat-send{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--teal);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;color:white;transition:background .15s,transform .12s;
+}
+.chat-send:hover{background:#0a7a6c;transform:scale(1.06)}
+.chat-send:disabled{background:var(--gray-light);cursor:not-allowed;transform:none}
+@media(max-width:768px){
+  .chat-trigger{bottom:72px}
+  .chat-window{
+    bottom:0;right:0;left:0;width:100%;height:100%;
+    max-height:100dvh;border-radius:0;transform:translateY(100%);
+  }
+  .chat-window.open{transform:translateY(0) scale(1)}
+  .chat-head{border-radius:0}
+}
 </style>
 </head>
 <body>
@@ -1315,6 +1456,33 @@ button{cursor:pointer;font-family:inherit}
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- ══ AI CHAT WIDGET ══ -->
+<button class="chat-trigger" id="chat-trigger" onclick="toggleChat()" aria-label="AI Assistant (Beta)">
+  <span class="chat-trigger-pulse"></span>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  <span class="chat-dot active" id="chat-dot"></span>
+  <span class="chat-trigger-tip">AI Assistant (Beta)</span>
+</button>
+<div class="chat-window" id="chat-window">
+  <div class="chat-head">
+    <div class="chat-head-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E8A7A" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </div>
+    <span class="chat-head-title">FinReportAI Assistant</span>
+    <span class="chat-beta">BETA</span>
+    <button class="chat-close" onclick="toggleChat()" aria-label="Close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-foot">
+    <textarea class="chat-input" id="chat-input" placeholder="Ask me anything…" rows="1"
+      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px'"
+      onkeydown="chatKeydown(event)"></textarea>
+    <button class="chat-send" id="chat-send" onclick="sendChatMessage()" aria-label="Send">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
@@ -2372,6 +2540,126 @@ window.setupPullToRefresh = function() {
     }
     triggered = false;
   }, { passive: true });
+};
+
+// ── AI CHAT WIDGET ─────────────────────────────────────────────────────────
+let _chatHistory = [], _chatOpen = false, _chatCount = 0;
+const CHAT_MAX = 20;
+const CHAT_WELCOME = "Hi! I'm the FinReportAI Assistant (Beta). I can help you navigate the portal, understand your reports, or answer any questions about your finances. What would you like to know?";
+
+window.toggleChat = function() {
+  _chatOpen = !_chatOpen;
+  document.getElementById('chat-window').classList.toggle('open', _chatOpen);
+  document.getElementById('chat-dot')?.classList.remove('active');
+  if (_chatOpen && _chatHistory.length === 0) {
+    _chatAddMsg('assistant', CHAT_WELCOME);
+  }
+  if (_chatOpen) {
+    scrollChatBottom();
+    setTimeout(() => document.getElementById('chat-input')?.focus(), 250);
+  }
+};
+
+window.chatKeydown = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+};
+
+window._chatAddMsg = function(role, text) {
+  const box = document.getElementById('chat-messages');
+  if (!box) return;
+  const d = document.createElement('div');
+  d.className = 'chat-msg ' + role;
+  d.textContent = text;
+  box.appendChild(d);
+  scrollChatBottom();
+};
+
+window.scrollChatBottom = function() {
+  const box = document.getElementById('chat-messages');
+  if (box) requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
+};
+
+window.showChatTyping = function() {
+  const box = document.getElementById('chat-messages');
+  if (!box) return;
+  const d = document.createElement('div');
+  d.className = 'chat-typing'; d.id = 'chat-typing-indicator';
+  d.innerHTML = '<div class="chat-typing-dot"></div><div class="chat-typing-dot"></div><div class="chat-typing-dot"></div>';
+  box.appendChild(d);
+  scrollChatBottom();
+};
+
+window.removeChatTyping = function() {
+  document.getElementById('chat-typing-indicator')?.remove();
+};
+
+window.sendChatMessage = async function() {
+  const input = document.getElementById('chat-input');
+  const text = (input?.value || '').trim();
+  if (!text) return;
+
+  if (_chatCount >= CHAT_MAX) {
+    _chatAddMsg('assistant', "You've reached the session limit for the AI assistant. Start a new session to continue.");
+    return;
+  }
+
+  _chatAddMsg('user', text);
+  _chatHistory.push({ role: 'user', content: text });
+  _chatCount++;
+  input.value = ''; input.style.height = 'auto';
+
+  const sendBtn = document.getElementById('chat-send');
+  if (sendBtn) sendBtn.disabled = true;
+  showChatTyping();
+
+  const firmName = currentFirm?.firm_name || 'Unknown Firm';
+  const firmPlan = currentFirm?.plan === 'white_label' ? 'White Label' :
+                   currentFirm?.plan === 'white_label_pro' ? 'White Label Pro' : 'Standard';
+  const systemPrompt = `You are the FinReportAI assistant, built into the client portal for UK accountancy firms. You help users navigate the portal, understand their financial reports, and get the most out of FinReportAI.
+
+You know the following about FinReportAI:
+- It generates branded PDF financial reports from client P&L CSV data
+- Reports include: executive summary, KPI cards, revenue charts, margin analysis, expense breakdown, P&L statement, waterfall chart, corporation tax estimate, cash flow, balance sheet, recommendations, forecast, flags, glossary
+- Standard plan: £299/mo, unlimited reports, PDF delivered by email
+- White Label plan: £499/mo, full firm branding on all reports
+- Reports are delivered within 15 minutes of submission
+- Data is deleted within 30 days, UK GDPR compliant
+- Works with Xero, QuickBooks, Sage, Excel, any CSV
+
+Current firm context:
+- Firm name: ${firmName}
+- Plan: ${firmPlan}
+
+Keep answers concise, helpful, and professional. If asked about specific report data you don't have access to, tell the user to check the report PDF or submit a new report. Never mention AI, Claude, or Anthropic. Refer to yourself as the FinReportAI Assistant.`;
+
+  try {
+    const res = await fetch('https://finreportai.onrender.com/ai-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        system: systemPrompt,
+        messages: _chatHistory,
+      }),
+    });
+    removeChatTyping();
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't generate a response.";
+    _chatHistory.push({ role: 'assistant', content: reply });
+    _chatAddMsg('assistant', reply);
+  } catch (err) {
+    removeChatTyping();
+    _chatAddMsg('assistant', "Sorry, I'm having trouble connecting right now. Please try again in a moment.");
+    _chatHistory.pop();
+    _chatCount--;
+  }
+
+  if (sendBtn) sendBtn.disabled = false;
+  scrollChatBottom();
 };
 </script>
 </body>
