@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FinReportAI — Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -423,7 +423,10 @@ button{cursor:pointer;font-family:inherit}
 .btn-download:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-lite)}
 
 /* ── EMPTY STATE ── */
-.empty-state{text-align:center;padding:56px 20px}
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:56px 20px;width:100%;
+}
 .empty-illustration{display:block;margin:0 auto 20px}
 .empty-title{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:7px}
 .empty-sub{font-size:14px;color:var(--gray);line-height:1.6;max-width:280px;margin:0 auto 20px}
@@ -728,6 +731,15 @@ button{cursor:pointer;font-family:inherit}
 }
 @media(min-width:769px){.swipe-hint{display:none}}
 
+/* ── NOTIFICATION DROPDOWN MOBILE ── */
+@media(max-width:768px){
+  .bell-dropdown{
+    position:fixed;top:var(--topbar);left:0;right:0;width:100%;
+    border-radius:0 0 12px 12px;border-left:none;border-right:none;
+    max-height:calc(100vh - var(--topbar));
+  }
+}
+
 /* ── AI CHAT WIDGET ── */
 .chat-trigger{
   position:fixed;bottom:24px;right:24px;
@@ -868,7 +880,71 @@ button{cursor:pointer;font-family:inherit}
   .chat-window.open{transform:translateY(0) scale(1)}
   .chat-head{border-radius:0}
 }
+/* ── DARK MODE TOGGLE SWITCH ── */
+.dm-toggle{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0}
+.dm-toggle input{opacity:0;width:0;height:0;position:absolute}
+.dm-slider{
+  position:absolute;inset:0;background:var(--gray-light);border-radius:100px;
+  cursor:pointer;transition:background .25s;
+}
+.dm-slider::before{
+  content:'';position:absolute;width:20px;height:20px;
+  left:3px;top:3px;border-radius:50%;background:white;
+  transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
+.dm-toggle input:checked + .dm-slider{background:var(--teal)}
+.dm-toggle input:checked + .dm-slider::before{transform:translateX(22px)}
+
+/* ── DARK MODE ── */
+html.dark{--white:#1e2538;--off-white:#151b2d;--gray-light:#2a3347;--gray:#8a95a5;--text:#dde3ee}
+html.dark body{background:var(--off-white)}
+html.dark .topbar{background:var(--white);border-color:var(--gray-light)}
+html.dark .topbar-title,html.dark .card-title,html.dark .stat-value,
+html.dark .empty-title,html.dark .panel-client-name,html.dark .panel-meta-value,
+html.dark .countdown-title,html.dark .session-modal-title{color:#c5d0e0}
+html.dark .card,html.dark .stat-card{background:var(--white);border-color:var(--gray-light)}
+html.dark .card-header{border-color:var(--gray-light)}
+html.dark .reports-table th{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .reports-table td{border-color:var(--gray-light)}
+html.dark .reports-table tbody tr:hover td{background:rgba(255,255,255,.04)}
+html.dark .form-input,html.dark .form-select,html.dark .form-textarea{
+  background:var(--off-white);color:var(--text);border-color:var(--gray-light);
+}
+html.dark .form-input:disabled{background:var(--off-white);color:var(--gray)}
+html.dark .btn-secondary{background:var(--white);border-color:var(--gray-light);color:var(--text)}
+html.dark .qa-btn{background:var(--white);border-color:var(--gray-light);color:var(--text)}
+html.dark .qa-btn:hover{border-color:var(--teal);color:var(--teal)}
+html.dark .bell-btn{background:var(--white);border-color:var(--gray-light)}
+html.dark .bell-dropdown{background:var(--white);border-color:var(--gray-light)}
+html.dark .bell-head{border-color:var(--gray-light)}
+html.dark .bell-item{border-color:var(--gray-light)}
+html.dark .bell-item:hover{background:var(--off-white)}
+html.dark .report-panel{background:var(--white)}
+html.dark .panel-close{background:var(--white);border-color:var(--gray-light)}
+html.dark .panel-head,html.dark .panel-foot{border-color:var(--gray-light)}
+html.dark .panel-meta{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .panel-status-row{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .upload-area{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .logo-preview{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .ac-dropdown{background:var(--white);border-color:var(--gray-light)}
+html.dark .ac-item:hover,html.dark .ac-item.ac-active{background:rgba(14,138,122,.18);color:var(--teal)}
+html.dark .countdown-card{background:var(--white);border-color:var(--gray-light)}
+html.dark .session-modal{background:var(--white)}
+html.dark .skel{background:linear-gradient(90deg,#1e2538 25%,#252c40 50%,#1e2538 75%);background-size:200% 100%}
+html.dark .color-swatch{border-color:var(--gray-light)}
+html.dark .color-picker-row input[type=color]{border-color:var(--gray-light)}
+html.dark .form-section-title{border-color:var(--gray-light)}
+html.dark .settings-save{border-color:var(--gray-light)}
+html.dark .form-submit-row{border-color:var(--gray-light)}
+html.dark .chat-window{background:var(--white)}
+html.dark .ob-banner{border-color:rgba(255,255,255,.06)}
+html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,168,76,.2)}
 </style>
+<script>
+(function(){
+  if(localStorage.getItem('fr_dark_mode')==='1')document.documentElement.classList.add('dark');
+})();
+</script>
 </head>
 <body>
 
@@ -1369,6 +1445,21 @@ button{cursor:pointer;font-family:inherit}
                 <label class="form-label">Plan</label>
                 <input class="form-input" id="s-plan" disabled style="background:var(--off-white);color:var(--gray)">
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><span class="card-title">Appearance</span></div>
+          <div class="card-body" style="padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+              <div>
+                <div style="font-size:14px;font-weight:600;color:var(--text)">Dark Mode</div>
+                <div style="font-size:13px;color:var(--gray);margin-top:3px">Switch the portal to a dark colour scheme</div>
+              </div>
+              <label class="dm-toggle">
+                <input type="checkbox" id="dm-toggle" onchange="toggleDarkMode(this.checked)">
+                <span class="dm-slider"></span>
+              </label>
             </div>
           </div>
         </div>
@@ -2079,9 +2170,16 @@ window.readFile = function(file) {
 };
 
 // ── SETTINGS ─────────────────────────────────────────────────────────────
+window.toggleDarkMode = function(on) {
+  document.documentElement.classList.toggle('dark', on);
+  localStorage.setItem('fr_dark_mode', on ? '1' : '0');
+};
+
 window.populateSettings = function() {
   if (!currentFirm) return;
   document.getElementById('s-firm-name').value  = currentFirm.firm_name || '';
+  const dmToggle = document.getElementById('dm-toggle');
+  if (dmToggle) dmToggle.checked = localStorage.getItem('fr_dark_mode') === '1';
   document.getElementById('s-tagline').value    = currentFirm.tagline || '';
   document.getElementById('s-contact').value    = currentFirm.contact || '';
   document.getElementById('s-logo').value       = currentFirm.logo_url || '';
