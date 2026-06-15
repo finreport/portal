@@ -1357,6 +1357,58 @@ html.dark .billing-plan-row{border-color:var(--gray-light)}
 html.dark .billing-plan-name{color:rgba(255,255,255,.9)}
 html.dark .analytics-chart-title{color:rgba(255,255,255,.9)}
 html.dark .billing-plan-badge{background:rgba(14,138,122,.2);color:var(--teal-light)}
+
+/* ── CSV VALIDATION ── */
+.csv-validation{margin-top:8px;display:none}
+.csv-validation.show{display:block}
+.csv-val-inner{font-size:12.5px;font-weight:500;border-radius:7px;padding:8px 12px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.4}
+.csv-val-good .csv-val-inner{color:var(--green);background:var(--green-soft);border:1px solid rgba(21,128,61,.2)}
+.csv-val-warn .csv-val-inner{color:var(--amber);background:var(--amber-soft);border:1px solid rgba(146,64,14,.2)}
+.csv-val-error .csv-val-inner{color:var(--red);background:var(--red-soft);border:1px solid rgba(185,28,28,.2)}
+.csv-sw-badge{
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);
+  color:#1d4ed8;letter-spacing:.1px;white-space:nowrap;
+}
+.csv-preview-wrap{margin-top:6px;display:none}
+.csv-preview-wrap.show{display:block}
+.csv-preview-toggle{
+  font-size:12px;color:var(--teal);background:none;border:none;cursor:pointer;
+  padding:0;font-family:inherit;font-weight:500;display:inline-flex;align-items:center;gap:4px;
+  transition:color .18s;
+}
+.csv-preview-toggle:hover{color:var(--teal-light)}
+.csv-preview-chevron{transition:transform .2s;display:inline-block;margin-top:1px}
+.csv-preview-toggle.open .csv-preview-chevron{transform:rotate(180deg)}
+.csv-preview-body{display:none;margin-top:8px;overflow-x:auto;
+  border:1px solid var(--gray-light);border-radius:8px}
+.csv-preview-body.show{display:block}
+.csv-preview-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.csv-preview-table th{
+  background:var(--off-white);font-weight:600;color:var(--text);
+  padding:6px 10px;border-bottom:1px solid var(--gray-light);
+  text-align:left;white-space:nowrap;
+}
+.csv-preview-table td{
+  padding:5px 10px;color:var(--gray);border-bottom:1px solid var(--gray-light);
+  max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.csv-preview-table tr:last-child td{border-bottom:none}
+.csv-submit-block{
+  font-size:12.5px;font-weight:500;color:var(--red);background:var(--red-soft);
+  border:1px solid rgba(185,28,28,.2);border-radius:7px;
+  padding:8px 12px;margin-bottom:10px;display:none;
+}
+.csv-submit-block.show{display:block}
+html.dark .csv-val-good .csv-val-inner{background:rgba(21,128,61,.15);border-color:rgba(21,128,61,.3);color:#4ade80}
+html.dark .csv-val-warn .csv-val-inner{background:rgba(146,64,14,.15);border-color:rgba(146,64,14,.3);color:#fbbf24}
+html.dark .csv-val-error .csv-val-inner{background:rgba(185,28,28,.15);border-color:rgba(185,28,28,.3);color:#f87171}
+html.dark .csv-sw-badge{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.3);color:#60a5fa}
+html.dark .csv-preview-body{border-color:var(--gray-light)}
+html.dark .csv-preview-table th{background:var(--off-white);color:rgba(255,255,255,.9);border-color:var(--gray-light)}
+html.dark .csv-preview-table td{border-color:var(--gray-light);color:rgba(255,255,255,.7)}
+html.dark .csv-submit-block{background:rgba(185,28,28,.15);border-color:rgba(185,28,28,.3);color:#f87171}
 </style>
 <script>
 (function(){
@@ -1824,6 +1876,8 @@ html.dark .billing-plan-badge{background:rgba(14,138,122,.2);color:var(--teal-li
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r=".5" fill="currentColor"/></svg>
                   File is <strong id="file-size-1"></strong> — large files may take longer to process
                 </div>
+                <div class="csv-validation" id="csv-validation-1"></div>
+                <div class="csv-preview-wrap" id="csv-preview-wrap-1"></div>
               </div>
               <div id="second-csv-wrapper" style="display:none" class="form-group full">
                 <label class="form-label">Comparison Period CSV <span>*</span></label>
@@ -1838,6 +1892,8 @@ html.dark .billing-plan-badge{background:rgba(14,138,122,.2);color:var(--teal-li
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r=".5" fill="currentColor"/></svg>
                   File is <strong id="file-size-2"></strong> — large files may take longer to process
                 </div>
+                <div class="csv-validation" id="csv-validation-2"></div>
+                <div class="csv-preview-wrap" id="csv-preview-wrap-2"></div>
               </div>
               <div class="csv-hint-wrap">
                 <button class="csv-hint-trigger" type="button" id="csv-hint-btn" onclick="toggleCsvHint()">
@@ -1920,6 +1976,7 @@ html.dark .billing-plan-badge{background:rgba(14,138,122,.2);color:var(--teal-li
                 </div>
               </div>
             </div>
+            <div class="csv-submit-block" id="csv-submit-block">Please fix the CSV issues above before submitting</div>
             <div class="form-submit-row">
               <div class="submit-status" id="submit-status"></div>
               <button class="btn-secondary" onclick="showPage('dashboard')">Cancel</button>
@@ -3320,16 +3377,171 @@ window.previewLogo = function() {
 };
 
 // ── FILE UPLOAD UX ────────────────────────────────────────────────────────
+let _csvValid = {};
+
 window.handleFileSelect = function(input, nameId) {
   if (input.files[0]) {
     const el = document.getElementById(nameId);
     el.textContent = '✓ ' + input.files[0].name;
     el.style.display = 'block';
     const isFirst = input.id === 'csv-file-1';
+    const slot = isFirst ? 1 : 2;
     checkCsvSize(input.files[0], isFirst ? 'file-size-warn-1' : 'file-size-warn-2',
                                   isFirst ? 'file-size-1'    : 'file-size-2');
+    validateCsvFile(input.files[0], slot);
     updateFormProgress();
   }
+};
+
+window.parseSimpleCsv = function(text) {
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const row = [];
+    let cell = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQ && line[i+1] === '"') { cell += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === ',' && !inQ) { row.push(cell.trim()); cell = ''; }
+      else cell += c;
+    }
+    row.push(cell.trim());
+    if (row.some(c => c !== '')) rows.push(row);
+  }
+  return rows;
+};
+
+window.validateCsvFile = async function(file, slot) {
+  const valEl = document.getElementById('csv-validation-' + slot);
+  const previewEl = document.getElementById('csv-preview-wrap-' + slot);
+  if (!valEl) return;
+
+  // Reset preview
+  if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.remove('show'); }
+
+  // Excel files — skip content parse, accept on size only
+  if (/\.xlsx?$/i.test(file.name)) {
+    if (file.size > 5 * 1024 * 1024) {
+      _showCsvVal(valEl, 'error', '✗ File too large — maximum 5MB');
+      _csvValid[slot] = false;
+    } else {
+      _showCsvVal(valEl, 'good', `✓ Excel file accepted — ${Math.round(file.size/1024)} KB`);
+      _csvValid[slot] = true;
+    }
+    updateSubmitBlocked();
+    return;
+  }
+
+  // Size check
+  if (file.size > 5 * 1024 * 1024) {
+    _showCsvVal(valEl, 'error', '✗ File too large — maximum 5MB');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  let text;
+  try { text = await readFile(file); } catch(e) {
+    _showCsvVal(valEl, 'error', '✗ Could not read file');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  if (!text || !text.trim()) {
+    _showCsvVal(valEl, 'error', '✗ File appears empty');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  const rows = parseSimpleCsv(text);
+
+  if (rows.length < 3) {
+    _showCsvVal(valEl, 'warn', '⚠ File seems too small — make sure you\'re uploading the full P&L');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  const hasMultiCol = rows.some(r => r.length > 2);
+  if (!hasMultiCol) {
+    _showCsvVal(valEl, 'warn', '⚠ File seems too small — make sure you\'re uploading the full P&L');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  const hasNumbers = rows.some(r => r.some(cell => {
+    const n = parseFloat(cell.replace(/[,£$€%\s]/g, ''));
+    return !isNaN(n) && n > 0;
+  }));
+  if (!hasNumbers) {
+    _showCsvVal(valEl, 'warn', '⚠ No numeric data detected — check this is a P&L export');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  // Valid — detect software
+  const maxCols = Math.max(...rows.map(r => r.length));
+  const tl = text.toLowerCase();
+  let badge = '';
+  if (tl.includes('xero')) badge = 'Xero';
+  else if (tl.includes('quickbooks')) badge = 'QuickBooks';
+  else if (tl.includes('sage')) badge = 'Sage';
+  const badgeHtml = badge
+    ? ` <span class="csv-sw-badge">ℹ ${badge} export detected</span>`
+    : '';
+  _showCsvVal(valEl, 'good', `✓ File looks good — ${rows.length} rows, ${maxCols} columns detected${badgeHtml}`);
+  _csvValid[slot] = true;
+  updateSubmitBlocked();
+
+  // Preview
+  if (previewEl) {
+    const preview = rows.slice(0, 5);
+    const hdrs = preview[0];
+    const bodyRows = preview.slice(1);
+    const thHtml = hdrs.map(h => `<th>${escHtml(h)}</th>`).join('');
+    const trHtml = bodyRows.map(r =>
+      `<tr>${hdrs.map((_,i) => `<td>${escHtml(r[i]||'')}</td>`).join('')}</tr>`
+    ).join('');
+    previewEl.innerHTML = `
+      <button class="csv-preview-toggle" onclick="toggleCsvPreview(${slot},this)">
+        <svg class="csv-preview-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        Preview data
+      </button>
+      <div class="csv-preview-body" id="csv-preview-body-${slot}">
+        <table class="csv-preview-table">
+          <thead><tr>${thHtml}</tr></thead>
+          <tbody>${trHtml}</tbody>
+        </table>
+      </div>`;
+    previewEl.classList.add('show');
+  }
+};
+
+window._showCsvVal = function(el, type, html) {
+  el.className = 'csv-validation show csv-val-' + type;
+  el.innerHTML = `<div class="csv-val-inner">${html}</div>`;
+};
+
+window.toggleCsvPreview = function(slot, btn) {
+  const body = document.getElementById('csv-preview-body-' + slot);
+  if (!body) return;
+  const open = body.classList.toggle('show');
+  btn.classList.toggle('open', open);
+};
+
+window.updateSubmitBlocked = function() {
+  const isComparison = document.getElementById('f-report-type')?.value === 'comparison';
+  const blocked = _csvValid[1] === false || (isComparison && _csvValid[2] === false);
+  const btn = document.getElementById('submit-btn');
+  const msg = document.getElementById('csv-submit-block');
+  if (btn) btn.disabled = blocked;
+  if (msg) msg.classList.toggle('show', blocked);
 };
 
 window.checkCsvSize = function(file, warnId, sizeId) {
