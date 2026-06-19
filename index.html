@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FinReportAI — Portal</title>
+<title>Pagevo — Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -190,6 +190,11 @@ button{cursor:pointer;font-family:inherit}
   cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
 }
 .btn-signout:hover{border-color:rgba(255,255,255,.22);color:rgba(255,255,255,.7)}
+.kbd-hint{margin-bottom:10px}
+.kbd-hint-title{font-size:10px;font-weight:600;color:rgba(255,255,255,.28);letter-spacing:.6px;text-transform:uppercase;margin-bottom:7px;padding:0 2px}
+.kbd-hint-row{display:flex;align-items:center;justify-content:space-between;padding:3px 2px}
+.kbd-hint-label{font-size:11px;color:rgba(255,255,255,.38)}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:4px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.42);font-family:'DM Sans',sans-serif;line-height:1;letter-spacing:0}
 
 /* TOPBAR */
 .main{margin-left:var(--sidebar);min-height:100vh}
@@ -264,7 +269,9 @@ button{cursor:pointer;font-family:inherit}
 }
 .bell-item-text{font-size:13px;color:var(--text);line-height:1.45}
 .bell-item-time{font-size:11px;color:var(--gray);margin-top:2px}
-.bell-empty-msg{padding:28px 16px;text-align:center;font-size:13px;color:var(--gray)}
+.bell-empty-state{padding:22px 16px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}
+.bell-empty-title{font-size:13px;font-weight:700;color:var(--navy);margin-top:4px}
+.bell-empty-sub{font-size:12px;color:var(--gray);line-height:1.55;max-width:200px}
 
 /* ── SKELETONS ── */
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
@@ -357,7 +364,7 @@ button{cursor:pointer;font-family:inherit}
 .btn-upgrade-dismiss:hover{color:var(--text)}
 
 /* ── STATS ROW ── */
-.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px}
 .stat-card{
   background:white;border:1px solid var(--gray-light);border-radius:12px;
   padding:20px;transition:box-shadow .22s,transform .22s;position:relative;overflow:hidden;
@@ -529,6 +536,108 @@ button{cursor:pointer;font-family:inherit}
 .submit-status.loading{color:var(--teal);display:block}
 .submit-status.success{color:var(--green);display:block}
 .submit-status.error{color:var(--red);display:block}
+
+/* ── FORM PROGRESS + VALIDATION ── */
+.form-steps{display:flex;align-items:center;padding:0 0 24px;gap:0}
+.form-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+.form-step-circle{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;
+  border:2px solid var(--gray-light);color:var(--gray);
+  transition:all .25s;background:var(--white);
+}
+.form-step-label{font-size:11px;font-weight:500;color:var(--gray);transition:color .25s;white-space:nowrap}
+.form-step-conn{flex:1;height:2px;background:var(--gray-light);margin:0 6px;margin-bottom:22px;transition:background .3s;min-width:20px}
+.form-step.active .form-step-circle{border-color:var(--teal);color:var(--teal);background:rgba(14,138,122,.09)}
+.form-step.active .form-step-label{color:var(--teal);font-weight:600}
+.form-step.done .form-step-circle{border-color:var(--teal);background:var(--teal);color:white}
+.form-step.done .form-step-label{color:var(--teal);font-weight:600}
+.form-step-conn.done{background:var(--teal)}
+.field-tick{
+  position:absolute;right:11px;top:50%;transform:translateY(-50%) scale(.5);
+  width:20px;height:20px;border-radius:50%;background:var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;flex-shrink:0;
+}
+.field-tick.show{opacity:1;transform:translateY(-50%) scale(1)}
+.input-valid{border-color:var(--teal)!important}
+.file-size-warn{
+  display:none;margin-top:8px;padding:8px 12px;
+  background:#FFFBEB;border:1px solid #F59E0B;border-radius:8px;
+  font-size:12.5px;color:#92400E;align-items:center;gap:7px;
+}
+.file-size-warn.show{display:flex}
+.csv-hint-wrap{margin-top:12px}
+.csv-hint-trigger{
+  background:none;border:1.5px solid var(--gray-light);border-radius:8px;
+  padding:8px 14px;font-size:13px;font-weight:500;color:var(--gray);
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  display:inline-flex;align-items:center;gap:7px;transition:all .15s;
+}
+.csv-hint-trigger:hover{border-color:var(--teal);color:var(--teal);background:rgba(14,138,122,.05)}
+.csv-hint-chevron{transition:transform .2s;flex-shrink:0}
+.csv-hint-trigger.open .csv-hint-chevron{transform:rotate(180deg)}
+.csv-hint-body{
+  display:none;margin-top:8px;padding:16px;
+  background:var(--off-white);border:1.5px solid var(--gray-light);border-radius:10px;
+}
+.csv-hint-body.show{display:block}
+.csv-hint-body p{font-size:13px;color:var(--gray);line-height:1.65;margin:0 0 10px}
+.csv-hint-body p:last-child{margin-bottom:0}
+.csv-hint-cols{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 10px}
+.csv-hint-col{
+  background:white;border:1px solid var(--gray-light);border-radius:5px;
+  padding:4px 10px;font-size:12px;font-weight:600;color:var(--navy);
+  font-family:'DM Mono','Courier New',monospace;
+}
+.char-counter{text-align:right;font-size:11.5px;color:var(--gray);margin-top:4px;transition:color .15s}
+.char-counter.warn{color:#F59E0B;font-weight:600}
+.char-counter.over{color:#EF4444;font-weight:600}
+
+/* ── TRIAL BANNER ── */
+.trial-banner{
+  background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.06));
+  border:1px solid rgba(201,168,76,.35);border-bottom:none;
+  padding:11px 32px;display:none;
+  align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  position:sticky;top:var(--topbar);z-index:39;
+}
+.trial-banner.show{display:flex}
+.trial-banner-text{font-size:13.5px;color:var(--navy);line-height:1.5}
+.trial-banner-text strong{color:var(--gold)}
+html.dark .trial-banner-text{color:rgba(255,255,255,.85)}
+.btn-trial-upgrade{
+  background:var(--gold);color:var(--navy);border:none;border-radius:7px;
+  padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap;
+  text-decoration:none;
+}
+.btn-trial-upgrade:hover{background:#d4b84a;transform:translateY(-1px)}
+
+/* ── PAYWALL CARD ── */
+.paywall-card{
+  background:var(--navy);border-radius:16px;padding:48px 40px;
+  text-align:center;border:1px solid rgba(201,168,76,.2);
+  box-shadow:0 8px 40px rgba(15,31,61,.25);margin-bottom:20px;
+}
+.paywall-icon{font-size:40px;margin-bottom:20px;line-height:1}
+.paywall-heading{
+  font-family:'DM Serif Display',serif;font-size:26px;color:white;
+  margin-bottom:12px;line-height:1.25;
+}
+.paywall-sub{font-size:14px;color:rgba(255,255,255,.58);line-height:1.7;margin-bottom:32px;max-width:420px;margin-left:auto;margin-right:auto}
+.paywall-plans{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.paywall-cta{
+  padding:13px 28px;border-radius:10px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+}
+.paywall-cta-standard{background:white;color:var(--navy);border:2px solid white}
+.paywall-cta-standard:hover{background:rgba(255,255,255,.9);transform:translateY(-1px)}
+.paywall-cta-wl{background:var(--gold);color:var(--navy);border:2px solid var(--gold)}
+.paywall-cta-wl:hover{background:#d4b84a;transform:translateY(-1px)}
+.paywall-gold-accent{height:3px;background:linear-gradient(to right,var(--gold),#d4b84a);border-radius:100px;width:60px;margin:0 auto 32px}
 
 /* ── SETTINGS ── */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -711,6 +820,20 @@ button{cursor:pointer;font-family:inherit}
   animation:spin .7s linear infinite;
 }
 
+/* ── REPORTS TABLE WRAP ── */
+.reports-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── REPORTS MOBILE ── */
+@media(max-width:768px){
+  #page-reports .card-header{flex-wrap:wrap;gap:10px}
+  #page-reports .card-header .search-wrap{flex:1 1 100%}
+  #page-reports .card-header .form-input{width:100%!important}
+  #page-reports .reports-table th,
+  #page-reports .reports-table td{font-size:12px;padding:10px 12px}
+  #page-reports .reports-table .col-type,
+  #page-reports .reports-table .col-generated{display:none}
+}
+
 /* ── MOBILE SWIPE ── */
 .swipe-dl-reveal{display:none}
 @media(max-width:768px){
@@ -880,6 +1003,137 @@ button{cursor:pointer;font-family:inherit}
   .chat-window.open{transform:translateY(0) scale(1)}
   .chat-head{border-radius:0}
 }
+/* ── ONBOARDING CHECKLIST ── */
+.ob-checklist{margin-bottom:22px}
+.ob-checklist .card-header{padding:14px 20px}
+.ob-check-list{padding:4px 0}
+.ob-check-item{
+  display:flex;align-items:center;gap:14px;padding:13px 20px;
+  cursor:pointer;transition:background .15s;border-bottom:1px solid var(--gray-light);
+}
+.ob-check-item:last-child{border-bottom:none}
+.ob-check-item:hover{background:var(--off-white)}
+.ob-check-item.ob-done{cursor:default}
+.ob-check-item.ob-done:hover{background:transparent}
+.ob-check-icon{
+  width:28px;height:28px;border-radius:50%;border:2px solid var(--gray-light);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--gray);transition:all .25s;
+}
+.ob-check-icon.ob-ticked{background:var(--teal);border-color:var(--teal);color:white}
+.ob-check-text{flex:1}
+.ob-check-label{font-size:14px;font-weight:500;color:var(--navy);transition:color .2s}
+.ob-check-item.ob-done .ob-check-label{color:var(--gray)}
+.ob-check-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.ob-check-arrow{font-size:16px;color:var(--gray-light);flex-shrink:0}
+
+/* ── REPORT CARDS (mobile) ── */
+.report-cards-list{display:none}
+.report-card{
+  padding:16px 20px;border-bottom:1px solid var(--gray-light);
+  cursor:pointer;transition:background .14s;
+}
+.report-card:last-child{border-bottom:none}
+.report-card:hover{background:rgba(14,138,122,.03)}
+.report-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+.report-card-name{font-size:15px;font-weight:600;color:var(--navy);line-height:1.3;flex:1}
+.report-card-meta{font-size:12.5px;color:var(--gray);margin-bottom:10px}
+.report-card-foot{display:flex;align-items:center;justify-content:space-between}
+.report-card-date{font-size:12px;color:var(--gray)}
+@media(max-width:768px){
+  .reports-table-wrap{display:none}
+  .report-cards-list{display:block}
+  .report-cards-list .empty-state{padding:40px 20px}
+}
+
+/* ── BRANDING PREVIEW MODAL ── */
+.bp-modal{
+  position:fixed;inset:0;z-index:350;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(15,31,61,.55);backdrop-filter:blur(4px);
+  animation:fadeIn .2s ease;
+}
+.bp-modal.hidden{display:none;animation:none}
+.bp-panel{
+  background:white;border-radius:16px;
+  max-width:460px;width:90%;max-height:90vh;overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.3);position:relative;
+}
+.bp-panel-head{
+  padding:16px 22px;border-bottom:1px solid var(--gray-light);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.bp-panel-title{font-size:15px;font-weight:600;color:var(--navy)}
+.bp-close{
+  width:30px;height:30px;border:1px solid var(--gray-light);border-radius:7px;
+  background:white;cursor:pointer;font-size:16px;color:var(--gray);
+  display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:inherit;
+}
+.bp-close:hover{border-color:var(--navy);color:var(--navy)}
+.bp-preview-body{padding:22px}
+.bp-mock-header{
+  border-radius:10px;padding:20px 22px;margin-bottom:14px;
+  display:flex;align-items:center;gap:14px;
+}
+.bp-mock-logo-wrap{
+  width:44px;height:44px;border-radius:8px;flex-shrink:0;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.bp-mock-logo-wrap img{width:100%;height:100%;object-fit:contain}
+.bp-mock-logo-init{font-family:'DM Serif Display',serif;font-size:18px;color:white}
+.bp-mock-firm-name{font-family:'DM Serif Display',serif;font-size:17px;color:white;line-height:1.2}
+.bp-mock-tagline{font-size:11.5px;color:rgba(255,255,255,.65);margin-top:3px}
+.bp-mock-accent{height:4px;border-radius:0 0 6px 6px;margin:-14px -22px 14px}
+.bp-mock-body{background:var(--off-white);border-radius:8px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bp-mock-block{background:white;border-radius:6px;padding:10px 12px;border:1px solid var(--gray-light)}
+.bp-mock-block-label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.bp-mock-block-val{font-size:13px;font-weight:500;color:var(--navy)}
+.bp-note{font-size:12px;color:var(--gray);text-align:center;margin-top:14px;line-height:1.5}
+html.dark .bp-panel{background:var(--white)}
+html.dark .bp-panel-head{border-color:var(--gray-light)}
+html.dark .bp-mock-body{background:var(--off-white)}
+html.dark .bp-mock-block{background:var(--white);border-color:var(--gray-light)}
+
+/* ── SUBMISSION CONFIRMATION ── */
+.submit-confirm{text-align:center;padding:4px 0 20px}
+.submit-confirm-check{
+  width:68px;height:68px;margin:0 auto 16px;border-radius:50%;
+  background:var(--green-soft);display:flex;align-items:center;justify-content:center;
+}
+.submit-confirm-check svg{width:34px;height:34px;fill:none;stroke:var(--green);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+@keyframes checkDraw{from{stroke-dashoffset:60}to{stroke-dashoffset:0}}
+.submit-confirm-check svg .check-mark{stroke-dasharray:60;stroke-dashoffset:60;animation:checkDraw .5s ease .15s forwards}
+.submit-confirm-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:8px}
+.submit-confirm-meta{font-size:13.5px;color:var(--gray);line-height:1.65}
+.submit-confirm-meta strong{color:var(--text)}
+.submit-confirm-divider{height:1px;background:var(--gray-light);margin:18px 0 16px}
+
+/* ── CHAT SUGGESTIONS ── */
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:7px;padding:2px 14px 12px}
+.chat-sugg-btn{
+  background:var(--teal-lite);border:1px solid rgba(14,138,122,.25);
+  color:var(--teal);border-radius:100px;padding:6px 14px;
+  font-size:12.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;white-space:nowrap;
+}
+.chat-sugg-btn:hover{background:var(--teal);color:white;border-color:var(--teal)}
+.chat-msg.assistant p{margin:0 0 7px}
+.chat-msg.assistant p:last-child{margin-bottom:0}
+.chat-msg.assistant ul,.chat-msg.assistant ol{margin:4px 0 8px;padding-left:18px}
+.chat-msg.assistant ul{list-style:none;padding-left:0}
+.chat-msg.assistant ul li{padding-left:14px;position:relative;margin-bottom:3px}
+.chat-msg.assistant ul li::before{content:'•';position:absolute;left:0;color:var(--teal);font-weight:700}
+.chat-msg.assistant ol{list-style:decimal;padding-left:18px}
+.chat-msg.assistant ol li{margin-bottom:3px}
+.chat-msg.assistant .chat-heading{display:block;font-size:14px;font-weight:700;color:var(--teal);margin:8px 0 4px}
+.chat-msg.assistant .chat-heading:first-child{margin-top:0}
+.chat-msg.assistant strong{font-weight:700;color:var(--navy)}
+
+@media(max-width:768px){
+  .chat-trigger{bottom:82px;width:62px;height:62px}
+}
+
 /* ── DARK MODE TOGGLE SWITCH ── */
 .dm-toggle{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0}
 .dm-toggle input{opacity:0;width:0;height:0;position:absolute}
@@ -896,12 +1150,12 @@ button{cursor:pointer;font-family:inherit}
 .dm-toggle input:checked + .dm-slider::before{transform:translateX(22px)}
 
 /* ── DARK MODE ── */
-html.dark{--white:#1e2538;--off-white:#151b2d;--gray-light:#2a3347;--gray:#8a95a5;--text:#dde3ee}
+html.dark{--white:#1e2538;--off-white:#151b2d;--gray-light:#2a3347;--gray:#a5aabb;--text:#e8edf5}
 html.dark body{background:var(--off-white)}
 html.dark .topbar{background:var(--white);border-color:var(--gray-light)}
 html.dark .topbar-title,html.dark .card-title,html.dark .stat-value,
-html.dark .empty-title,html.dark .panel-client-name,html.dark .panel-meta-value,
-html.dark .countdown-title,html.dark .session-modal-title{color:#c5d0e0}
+html.dark .empty-title,html.dark .bell-empty-title,html.dark .panel-client-name,html.dark .panel-meta-value,
+html.dark .countdown-title,html.dark .session-modal-title{color:white}
 html.dark .card,html.dark .stat-card{background:var(--white);border-color:var(--gray-light)}
 html.dark .card-header{border-color:var(--gray-light)}
 html.dark .reports-table th{background:var(--off-white);border-color:var(--gray-light)}
@@ -925,6 +1179,11 @@ html.dark .panel-head,html.dark .panel-foot{border-color:var(--gray-light)}
 html.dark .panel-meta{background:var(--off-white);border-color:var(--gray-light)}
 html.dark .panel-status-row{background:var(--off-white);border-color:var(--gray-light)}
 html.dark .upload-area{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .csv-hint-body{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .csv-hint-col{background:var(--white);border-color:var(--gray-light);color:rgba(255,255,255,.87)}
+html.dark .csv-hint-trigger{border-color:var(--gray-light);color:rgba(255,255,255,.72)}
+html.dark .file-size-warn{background:#2a1a00;border-color:#a16207;color:#fde68a}
+html.dark .form-step-circle{background:var(--white)}
 html.dark .logo-preview{background:var(--off-white);border-color:var(--gray-light)}
 html.dark .ac-dropdown{background:var(--white);border-color:var(--gray-light)}
 html.dark .ac-item:hover,html.dark .ac-item.ac-active{background:rgba(14,138,122,.18);color:var(--teal)}
@@ -933,12 +1192,367 @@ html.dark .session-modal{background:var(--white)}
 html.dark .skel{background:linear-gradient(90deg,#1e2538 25%,#252c40 50%,#1e2538 75%);background-size:200% 100%}
 html.dark .color-swatch{border-color:var(--gray-light)}
 html.dark .color-picker-row input[type=color]{border-color:var(--gray-light)}
-html.dark .form-section-title{border-color:var(--gray-light)}
+html.dark .form-section-title{border-color:var(--gray-light);color:rgba(255,255,255,.9)}
 html.dark .settings-save{border-color:var(--gray-light)}
 html.dark .form-submit-row{border-color:var(--gray-light)}
 html.dark .chat-window{background:var(--white)}
 html.dark .ob-banner{border-color:rgba(255,255,255,.06)}
 html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,168,76,.2)}
+
+/* ── DARK MODE TEXT CONTRAST FIXES ── */
+
+/* Elements using color:var(--navy) — invisible on dark bg */
+html.dark .ob-check-label{color:rgba(255,255,255,.92)}
+html.dark .ob-check-item.ob-done .ob-check-label{color:rgba(255,255,255,.48)}
+html.dark .ob-check-sub{color:rgba(255,255,255,.6)}
+html.dark .ob-check-icon{color:rgba(255,255,255,.58);border-color:var(--gray-light)}
+html.dark .bell-head-title{color:rgba(255,255,255,.92)}
+html.dark .report-card-name{color:rgba(255,255,255,.92)}
+html.dark .submit-confirm-title{color:white}
+html.dark .submit-confirm-meta{color:rgba(255,255,255,.7)}
+html.dark .submit-confirm-meta strong{color:rgba(255,255,255,.9)}
+html.dark .submit-confirm-divider{background:var(--gray-light)}
+html.dark .upgrade-text{color:rgba(255,255,255,.82)}
+html.dark .upgrade-text strong{color:white}
+html.dark .upgrade-text a{color:var(--teal-light)}
+html.dark .bp-panel-title{color:rgba(255,255,255,.92)}
+html.dark .bp-mock-block-val{color:rgba(255,255,255,.9)}
+html.dark .bp-mock-block-label{color:rgba(255,255,255,.62)}
+html.dark .bp-note{color:rgba(255,255,255,.58)}
+
+/* Form elements */
+html.dark .form-label{color:rgba(255,255,255,.72)}
+html.dark .upload-text{color:rgba(255,255,255,.75)}
+html.dark .upload-hint{color:rgba(255,255,255,.55)}
+html.dark .optional-toggle{color:rgba(255,255,255,.72)}
+html.dark .char-counter{color:rgba(255,255,255,.55)}
+html.dark .form-step-label{color:rgba(255,255,255,.68)}
+html.dark .form-step-circle{color:rgba(255,255,255,.68)}
+html.dark .submit-status{color:rgba(255,255,255,.65)}
+
+/* Settings */
+html.dark .btn-logo-upload{background:var(--white);border-color:var(--gray-light);color:rgba(255,255,255,.82)}
+html.dark .btn-logo-upload:hover{border-color:var(--teal);color:var(--teal)}
+html.dark .logo-upload-status{color:rgba(255,255,255,.6)}
+html.dark .logo-preview-placeholder{color:rgba(255,255,255,.45)}
+
+/* Stat cards */
+html.dark .stat-label{color:rgba(255,255,255,.65)}
+
+/* Report panel */
+html.dark .panel-meta-label{color:rgba(255,255,255,.6)}
+html.dark .panel-status-lbl{color:rgba(255,255,255,.6)}
+html.dark .panel-close{color:rgba(255,255,255,.65)}
+
+/* Report cards (mobile) */
+html.dark .report-card{border-color:var(--gray-light)}
+html.dark .report-card-meta{color:rgba(255,255,255,.62)}
+html.dark .report-card-date{color:rgba(255,255,255,.58)}
+
+/* Notification dropdown */
+html.dark .bell-item-text{color:rgba(255,255,255,.9)}
+html.dark .bell-item-time{color:rgba(255,255,255,.58)}
+html.dark .bell-empty-sub{color:rgba(255,255,255,.6)}
+
+/* Countdown */
+html.dark .countdown-sub{color:rgba(255,255,255,.7)}
+html.dark .countdown-done{color:#4ade80}
+
+/* Session timeout modal */
+html.dark .session-modal-sub{color:rgba(255,255,255,.7)}
+
+/* Empty states */
+html.dark .empty-sub{color:rgba(255,255,255,.65)}
+
+/* Download button */
+html.dark .btn-download{background:var(--white);border-color:var(--gray-light);color:rgba(255,255,255,.68)}
+html.dark .btn-download:hover{border-color:var(--teal);color:var(--teal);background:rgba(14,138,122,.08)}
+
+/* Search icon */
+html.dark .search-wrap svg{color:rgba(255,255,255,.45)}
+
+/* AI chat widget */
+html.dark .chat-foot{background:var(--white);border-color:var(--gray-light)}
+html.dark .chat-input{background:var(--off-white);color:rgba(255,255,255,.9);border-color:var(--gray-light)}
+html.dark .chat-input::placeholder{color:rgba(255,255,255,.32)}
+html.dark .chat-msg.assistant{background:rgba(14,138,122,.2);color:rgba(255,255,255,.9)}
+html.dark .chat-msg.user{background:rgba(99,102,241,.24);color:rgba(255,255,255,.9)}
+html.dark .chat-msg.assistant strong{color:white}
+html.dark .chat-msg.assistant .chat-heading{color:var(--teal-light)}
+html.dark .chat-msg.assistant ul li::before{color:var(--teal-light)}
+html.dark .chat-typing{background:rgba(14,138,122,.2)}
+html.dark .chat-sugg-btn{background:rgba(14,138,122,.14);border-color:rgba(14,138,122,.3);color:var(--teal-light)}
+html.dark .chat-sugg-btn:hover{background:var(--teal);color:white;border-color:var(--teal)}
+html.dark .chat-send:disabled{background:var(--gray-light)}
+
+/* Hover states that reference --navy (invisible on dark bg) */
+html.dark .reports-table th.sortable:hover{color:rgba(255,255,255,.9)}
+html.dark .panel-close:hover{border-color:rgba(255,255,255,.35);color:white;background:var(--off-white)}
+html.dark .bp-close:hover{border-color:rgba(255,255,255,.35);color:white}
+html.dark .ob-check-arrow{color:rgba(255,255,255,.35)}
+
+/* ── RECENT CLIENT PILLS ── */
+.recent-pills-wrap{margin-top:10px}
+.recent-pills-label{font-size:11.5px;color:var(--gray);margin-bottom:5px;font-weight:500}
+.recent-pills{display:flex;flex-wrap:wrap;gap:6px}
+.recent-pill{font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-lite);
+  border:1px solid rgba(14,138,122,.2);border-radius:20px;padding:4px 12px;
+  cursor:pointer;transition:background .18s,color .18s;white-space:nowrap;font-family:inherit}
+.recent-pill:hover{background:var(--teal);color:white}
+
+/* ── STAT TOOLTIP ── */
+.stat-has-tip{position:relative}
+.stat-tip-icon{
+  position:absolute;top:8px;right:8px;width:17px;height:17px;border-radius:50%;
+  background:var(--gray-light);display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:var(--gray);cursor:help;font-family:'DM Sans',sans-serif;font-weight:600;
+}
+.stat-tip-text{
+  display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:20;
+  background:#1a2540;color:white;font-size:11px;border-radius:6px;
+  padding:6px 10px;width:max-content;max-width:220px;line-height:1.5;
+  box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;
+}
+.stat-has-tip:hover .stat-tip-text{display:block}
+
+/* ── REGEN BUTTON ── */
+.btn-regen{
+  font-size:11px;font-weight:500;padding:4px 8px;border-radius:6px;
+  border:1px solid rgba(201,168,76,.45);background:rgba(201,168,76,.08);
+  color:var(--gold);cursor:pointer;font-family:inherit;
+  transition:background .18s,color .18s;white-space:nowrap;margin-left:5px;
+  vertical-align:middle;
+}
+.btn-regen:hover{background:var(--gold);color:white}
+
+/* ── ANALYTICS PAGE ── */
+.analytics-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.analytics-chart-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px}
+.analytics-bar-chart{width:100%;overflow:visible;display:block}
+.analytics-bar-label,.analytics-bar-val{font-size:11px;fill:var(--gray);text-anchor:middle;font-family:'DM Sans',sans-serif}
+
+/* ── BILLING CARD ── */
+.billing-plan-row{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;border-bottom:1px solid var(--gray-light);gap:12px}
+.billing-plan-row:last-child{border-bottom:none;padding-bottom:0}
+.billing-plan-name{font-size:15px;font-weight:600;color:var(--text)}
+.billing-plan-price{font-size:13px;color:var(--gray);margin-top:2px}
+.billing-plan-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;
+  background:var(--teal-lite);color:var(--teal);letter-spacing:.2px;white-space:nowrap}
+.btn-billing-upgrade{
+  font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;
+  background:var(--teal);color:white;border:none;cursor:pointer;
+  font-family:inherit;transition:background .18s;text-decoration:none;
+  display:inline-block;white-space:nowrap;
+}
+.btn-billing-upgrade:hover{background:var(--teal-light)}
+
+/* ── DARK MODE: NEW ELEMENTS ── */
+html.dark .recent-pill{background:rgba(14,138,122,.18);border-color:rgba(14,138,122,.3);color:var(--teal-light)}
+html.dark .recent-pill:hover{background:var(--teal);color:white}
+html.dark .recent-pills-label{color:rgba(255,255,255,.6)}
+html.dark .stat-tip-icon{background:var(--gray-light);color:var(--gray)}
+html.dark .btn-regen{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.3)}
+html.dark .billing-plan-row{border-color:var(--gray-light)}
+html.dark .billing-plan-name{color:rgba(255,255,255,.9)}
+html.dark .analytics-chart-title{color:rgba(255,255,255,.9)}
+html.dark .billing-plan-badge{background:rgba(14,138,122,.2);color:var(--teal-light)}
+
+/* ── CSV VALIDATION ── */
+.csv-validation{margin-top:8px;display:none}
+.csv-validation.show{display:block}
+.csv-val-inner{font-size:12.5px;font-weight:500;border-radius:7px;padding:8px 12px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.4}
+.csv-val-good .csv-val-inner{color:var(--green);background:var(--green-soft);border:1px solid rgba(21,128,61,.2)}
+.csv-val-warn .csv-val-inner{color:var(--amber);background:var(--amber-soft);border:1px solid rgba(146,64,14,.2)}
+.csv-val-error .csv-val-inner{color:var(--red);background:var(--red-soft);border:1px solid rgba(185,28,28,.2)}
+.csv-sw-badge{
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);
+  color:#1d4ed8;letter-spacing:.1px;white-space:nowrap;
+}
+.csv-preview-wrap{margin-top:6px;display:none}
+.csv-preview-wrap.show{display:block}
+.csv-preview-toggle{
+  font-size:12px;color:var(--teal);background:none;border:none;cursor:pointer;
+  padding:0;font-family:inherit;font-weight:500;display:inline-flex;align-items:center;gap:4px;
+  transition:color .18s;
+}
+.csv-preview-toggle:hover{color:var(--teal-light)}
+.csv-preview-chevron{transition:transform .2s;display:inline-block;margin-top:1px}
+.csv-preview-toggle.open .csv-preview-chevron{transform:rotate(180deg)}
+.csv-preview-body{display:none;margin-top:8px;overflow-x:auto;
+  border:1px solid var(--gray-light);border-radius:8px}
+.csv-preview-body.show{display:block}
+.csv-preview-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.csv-preview-table th{
+  background:var(--off-white);font-weight:600;color:var(--text);
+  padding:6px 10px;border-bottom:1px solid var(--gray-light);
+  text-align:left;white-space:nowrap;
+}
+.csv-preview-table td{
+  padding:5px 10px;color:var(--gray);border-bottom:1px solid var(--gray-light);
+  max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.csv-preview-table tr:last-child td{border-bottom:none}
+.csv-submit-block{
+  font-size:12.5px;font-weight:500;color:var(--red);background:var(--red-soft);
+  border:1px solid rgba(185,28,28,.2);border-radius:7px;
+  padding:8px 12px;margin-bottom:10px;display:none;
+}
+.csv-submit-block.show{display:block}
+html.dark .csv-val-good .csv-val-inner{background:rgba(21,128,61,.15);border-color:rgba(21,128,61,.3);color:#4ade80}
+html.dark .csv-val-warn .csv-val-inner{background:rgba(146,64,14,.15);border-color:rgba(146,64,14,.3);color:#fbbf24}
+html.dark .csv-val-error .csv-val-inner{background:rgba(185,28,28,.15);border-color:rgba(185,28,28,.3);color:#f87171}
+html.dark .csv-sw-badge{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.3);color:#60a5fa}
+html.dark .csv-preview-body{border-color:var(--gray-light)}
+html.dark .csv-preview-table th{background:var(--off-white);color:rgba(255,255,255,.9);border-color:var(--gray-light)}
+html.dark .csv-preview-table td{border-color:var(--gray-light);color:rgba(255,255,255,.7)}
+html.dark .csv-submit-block{background:rgba(185,28,28,.15);border-color:rgba(185,28,28,.3);color:#f87171}
+
+/* ── CSV CATEGORY REVIEW ── */
+.csv-review-panel{
+  background:#fff;border:1px solid var(--gray-light);border-radius:12px;
+  padding:20px 20px 16px;margin-bottom:16px;display:none;
+}
+.csv-review-panel.show{display:block}
+.csv-review-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:3px}
+.csv-review-sub{font-size:12.5px;color:var(--gray);margin-bottom:14px}
+.csv-review-table-scroll{overflow-x:auto}
+.csv-review-table{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+.csv-review-table th{
+  padding:7px 10px;text-align:left;font-size:11.5px;font-weight:600;
+  color:var(--gray);text-transform:uppercase;letter-spacing:.04em;
+  border-bottom:2px solid var(--gray-light);white-space:nowrap;
+}
+.csv-review-table td{padding:7px 10px;border-bottom:1px solid var(--gray-light);vertical-align:middle}
+.csv-review-table tr:last-child td{border-bottom:none}
+.csv-review-row-label{color:var(--navy);font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csv-review-row-val{color:var(--gray);font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.cat-badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;
+  cursor:pointer;user-select:none;transition:background .15s,color .15s;border:1.5px solid transparent;white-space:nowrap;
+}
+.cat-badge.revenue{background:#ecfdf5;color:#059669;border-color:#6ee7b7}
+.cat-badge.cogs{background:#fff7ed;color:#d97706;border-color:#fcd34d}
+.cat-badge.opex{background:#eff6ff;color:#3b82f6;border-color:#93c5fd}
+.cat-badge.other{background:#f9fafb;color:#6b7280;border-color:#d1d5db}
+.csv-review-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;align-items:center}
+.csv-review-count{font-size:12px;color:var(--gray);flex:1}
+html.dark .csv-review-panel{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .csv-review-title{color:#e2e8f0}
+html.dark .csv-review-row-label{color:#e2e8f0}
+html.dark .csv-review-row-val{color:rgba(255,255,255,.5)}
+html.dark .csv-review-table th{border-color:var(--gray-light);color:rgba(255,255,255,.5)}
+html.dark .csv-review-table td{border-color:var(--gray-light)}
+html.dark .cat-badge.revenue{background:rgba(5,150,105,.15);color:#34d399;border-color:rgba(52,211,153,.3)}
+html.dark .cat-badge.cogs{background:rgba(217,119,6,.15);color:#fbbf24;border-color:rgba(251,191,36,.3)}
+html.dark .cat-badge.opex{background:rgba(59,130,246,.15);color:#60a5fa;border-color:rgba(96,165,250,.3)}
+html.dark .cat-badge.other{background:rgba(107,114,128,.15);color:#9ca3af;border-color:rgba(156,163,175,.3)}
+
+/* ── UPGRADE PAGE ── */
+.upgrade-nav-dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--gold);margin-left:6px;vertical-align:middle;
+  animation:pulse-gold 1.8s ease-in-out infinite;
+}
+@keyframes pulse-gold{
+  0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.6)}
+  60%{box-shadow:0 0 0 5px rgba(201,168,76,0)}
+}
+.upg-page-header{
+  background:var(--navy);border-radius:14px;
+  padding:48px 40px 36px;text-align:center;margin-bottom:28px;
+}
+.upg-page-heading{
+  font-family:'DM Serif Display',serif;font-size:32px;color:white;
+  margin-bottom:10px;line-height:1.2;
+}
+.upg-page-sub{font-size:15px;color:rgba(255,255,255,.62);line-height:1.6;max-width:460px;margin:0 auto 0}
+.billing-toggle{
+  display:inline-flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;padding:3px;gap:2px;margin-top:28px;
+}
+.billing-toggle-btn{
+  padding:8px 18px;border-radius:8px;border:none;background:none;
+  font-size:13.5px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .18s;white-space:nowrap;
+}
+.billing-toggle-btn.active{
+  background:white;color:var(--navy);font-weight:600;
+  box-shadow:0 1px 4px rgba(15,31,61,.18);
+}
+.billing-toggle-save{
+  font-size:11px;font-weight:700;color:var(--gold);
+  background:rgba(201,168,76,.18);border-radius:20px;
+  padding:1px 7px;margin-left:3px;vertical-align:middle;
+}
+.plan-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.plan-card{
+  background:white;border:1.5px solid var(--gray-light);border-radius:16px;
+  padding:32px 28px;position:relative;display:flex;flex-direction:column;
+}
+.plan-card.featured{border-color:var(--gold);box-shadow:0 4px 28px rgba(201,168,76,.18)}
+.plan-badge{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;
+  text-transform:uppercase;color:var(--navy);background:var(--gold);
+  border-radius:20px;padding:3px 12px;margin-bottom:14px;
+}
+.plan-name{font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--gray);margin-bottom:8px}
+.plan-price-row{display:flex;align-items:baseline;gap:2px;margin-bottom:4px}
+.plan-price-sym{font-size:22px;font-weight:600;color:var(--navy);align-self:flex-start;margin-top:6px}
+.plan-price-num{font-family:'DM Serif Display',serif;font-size:44px;color:var(--navy);line-height:1}
+.plan-price-period{font-size:14px;color:var(--gray);margin-left:3px}
+.plan-billed-note{font-size:12px;color:var(--gray);margin-bottom:22px;min-height:17px}
+.plan-features{list-style:none;padding:0;margin:0 0 28px;flex:1}
+.plan-feature-item{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:13.5px;color:var(--text);padding:5px 0;line-height:1.4;
+}
+.plan-feature-check{
+  width:16px;height:16px;border-radius:50%;flex-shrink:0;margin-top:2px;
+  background:rgba(14,138,122,.12);color:var(--teal);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+}
+.plan-feature-check-gold{background:rgba(201,168,76,.18);color:#9a6a10}
+.plan-cta{
+  display:block;width:100%;padding:13px;border-radius:10px;box-sizing:border-box;
+  font-size:14.5px;font-weight:700;text-align:center;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;text-decoration:none;border:none;
+}
+.plan-cta-standard{background:var(--navy);color:white}
+.plan-cta-standard:hover{background:#1a3060;transform:translateY(-1px)}
+.plan-cta-wl{background:var(--gold);color:var(--navy)}
+.plan-cta-wl:hover{background:#d4b84a;transform:translateY(-1px)}
+.trust-strip{
+  text-align:center;font-size:13px;color:var(--gray);
+  padding:16px 0;border-top:1px solid var(--gray-light);
+  margin-bottom:24px;
+}
+.trust-strip-dot{margin:0 10px;opacity:.4}
+.manage-sub{
+  background:var(--off-white);border:1px solid var(--gray-light);
+  border-radius:12px;padding:20px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.manage-sub-text{font-size:14px;color:var(--text)}
+.manage-sub-text strong{font-weight:600;color:var(--navy)}
+@media(max-width:680px){
+  .plan-cards-grid{grid-template-columns:1fr}
+  .upg-page-header{padding:32px 20px 28px;display:flex;flex-direction:column;align-items:center}
+  .upg-page-heading{font-size:24px}
+  .billing-toggle-btn{padding:7px 11px;font-size:12.5px}
+}
+html.dark .plan-card{background:var(--white);border-color:var(--gray-light)}
+html.dark .plan-card.featured{border-color:var(--gold)}
+html.dark .plan-name{color:rgba(255,255,255,.5)}
+html.dark .plan-price-sym,html.dark .plan-price-num{color:white}
+html.dark .plan-billed-note{color:rgba(255,255,255,.45)}
+html.dark .plan-feature-item{color:rgba(255,255,255,.82)}
+html.dark .trust-strip{color:rgba(255,255,255,.45);border-color:var(--gray-light)}
+html.dark .manage-sub{background:var(--white);border-color:var(--gray-light)}
+html.dark .manage-sub-text{color:rgba(255,255,255,.82)}
+html.dark .manage-sub-text strong{color:white}
 </style>
 <script>
 (function(){
@@ -952,8 +1566,8 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">
-      <div class="auth-logo-mark">FR</div>
-      <span class="auth-logo-text">FinReport<span>AI</span></span>
+      <div class="auth-logo-mark">PV</div>
+      <span class="auth-logo-text">Pagevo</span>
     </div>
     <h1 class="auth-title">Welcome back</h1>
     <p class="auth-sub">Sign in to your firm's portal to manage reports and settings.</p>
@@ -999,8 +1613,8 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
 <div id="pending-screen">
   <div class="pending-card">
     <div class="auth-logo" style="justify-content:center;margin-bottom:28px">
-      <div class="auth-logo-mark">FR</div>
-      <span class="auth-logo-text">FinReport<span>AI</span></span>
+      <div class="auth-logo-mark">PV</div>
+      <span class="auth-logo-text">Pagevo</span>
     </div>
     <div class="pending-icon">⏳</div>
     <h1 class="pending-title">Account Pending Activation</h1>
@@ -1009,7 +1623,7 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
       <span class="pending-email" id="pending-email">your registered address</span><br>
       once activated.<br><br>
       If you have any questions, contact<br>
-      <a href="mailto:reports@finreportai.co.uk">reports@finreportai.co.uk</a>
+      <a href="mailto:reports@pagevo.co.uk">reports@pagevo.co.uk</a>
     </p>
     <button class="btn-pending-signout" onclick="signOut()">Sign out</button>
   </div>
@@ -1019,8 +1633,8 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
 <div id="app">
   <aside class="sidebar">
     <a class="sidebar-logo" href="#">
-      <div class="sidebar-logo-mark">FR</div>
-      <span class="sidebar-logo-text">FinReport<span>AI</span></span>
+      <div class="sidebar-logo-mark">PV</div>
+      <span class="sidebar-logo-text">Pagevo</span>
     </a>
     <nav class="sidebar-nav">
       <div class="nav-section">
@@ -1033,6 +1647,14 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           Reports
         </div>
+        <div class="nav-item" onclick="showPage('clients')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          Clients
+        </div>
+        <div class="nav-item analytics-nav" onclick="showPage('analytics')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics
+        </div>
         <div class="nav-item" onclick="showPage('submit')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           New Report
@@ -1040,7 +1662,11 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Account</div>
-        <div class="nav-item" onclick="showPage('settings')">
+        <div class="nav-item upgrade-nav" onclick="showPage('upgrade')" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Upgrade<span class="upgrade-nav-dot" id="upgrade-dot-sidebar" style="display:none"></span>
+        </div>
+        <div class="nav-item settings-nav" onclick="showPage('settings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           Settings
         </div>
@@ -1061,6 +1687,14 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
           <span class="profile-complete-label" id="profile-complete-label">Profile setup</span>
           <span class="profile-complete-sub">Complete your branding</span>
         </div>
+      </div>
+      <div class="kbd-hint">
+        <div class="kbd-hint-title">⌨ Shortcuts</div>
+        <div class="kbd-hint-row"><span class="kbd-hint-label">Dashboard</span><span class="kbd">D</span></div>
+        <div class="kbd-hint-row"><span class="kbd-hint-label">Reports</span><span class="kbd">R</span></div>
+        <div class="kbd-hint-row"><span class="kbd-hint-label">New Report</span><span class="kbd">N</span></div>
+        <div class="kbd-hint-row"><span class="kbd-hint-label">Close panel</span><span class="kbd">Esc</span></div>
+        <div class="kbd-hint-row"><span class="kbd-hint-label">Submit form</span><span class="kbd">↵</span></div>
       </div>
       <div class="firm-info">
         <div class="firm-avatar" id="sidebar-avatar">F</div>
@@ -1091,7 +1725,20 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
               <button class="bell-clear-btn" onclick="clearNotifications()">Clear all</button>
             </div>
             <div class="bell-list" id="bell-list">
-              <div class="bell-empty-msg">No notifications yet</div>
+              <div class="bell-empty-state">
+                <svg width="64" height="60" viewBox="0 0 64 60" fill="none">
+                  <circle cx="32" cy="30" r="26" fill="#E6F4F2" fill-opacity=".55"/>
+                  <path d="M32 10 C32 10 20 20 20 33 L20 43 L44 43 L44 33 C44 20 32 10 32 10 Z" fill="white" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".72" stroke-linejoin="round"/>
+                  <rect x="28" y="7" width="8" height="7" rx="3.5" fill="#0E8A7A" fill-opacity=".35"/>
+                  <path d="M27 43 Q32 51 37 43" fill="none" stroke="#0E8A7A" stroke-width="1.5" stroke-linecap="round" stroke-opacity=".65"/>
+                  <path d="M50 13 L51.2 16.2 L54.5 17 L51.2 17.8 L50 21 L48.8 17.8 L45.5 17 L48.8 16.2 Z" fill="#D4AF37" fill-opacity=".85"/>
+                  <circle cx="13" cy="17" r="2" fill="#D4AF37" fill-opacity=".5"/>
+                  <circle cx="54" cy="30" r="1.5" fill="#0E8A7A" fill-opacity=".38"/>
+                  <circle cx="11" cy="36" r="1" fill="#0E8A7A" fill-opacity=".3"/>
+                </svg>
+                <div class="bell-empty-title">All caught up</div>
+                <div class="bell-empty-sub">You'll be notified here when a report is ready.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1102,28 +1749,47 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
       </div>
     </div>
 
+    <!-- Free trial banner — shown on all pages for trial firms -->
+    <div class="trial-banner" id="trial-banner">
+      <div class="trial-banner-text"><strong>Free trial</strong> — 1 report included. Upgrade to unlock unlimited reports.</div>
+      <button class="btn-trial-upgrade" onclick="showPage('upgrade')">Upgrade →</button>
+    </div>
+
     <div class="content">
 
       <!-- ── DASHBOARD ── -->
       <div id="page-dashboard" class="page active">
 
-        <!-- Onboarding banner -->
-        <div class="ob-banner" id="ob-banner">
-          <button class="ob-dismiss" onclick="dismissOnboarding()" title="Dismiss">✕</button>
-          <div class="ob-title">Welcome to FinReportAI 👋</div>
-          <div class="ob-sub">Get started in three steps — takes less than 5 minutes.</div>
-          <div class="ob-steps">
-            <div class="ob-step" onclick="showPage('settings')">
-              <div class="ob-step-num">1</div>
-              <div class="ob-step-text">Set your branding &amp; logo</div>
+        <!-- Onboarding checklist -->
+        <div class="card ob-checklist" id="ob-checklist" style="display:none">
+          <div class="card-header">
+            <span class="card-title">Getting Started</span>
+            <button onclick="dismissOnboarding()" title="Dismiss" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--gray);line-height:1;padding:2px 4px;font-family:inherit;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--gray)'">✕</button>
+          </div>
+          <div class="ob-check-list">
+            <div class="ob-check-item" id="ob-step-1" onclick="showPage('settings')">
+              <div class="ob-check-icon" id="ob-icon-1">1</div>
+              <div class="ob-check-text">
+                <div class="ob-check-label">Complete your branding</div>
+                <div class="ob-check-sub">Add your logo, primary and accent colours</div>
+              </div>
+              <div class="ob-check-arrow">→</div>
             </div>
-            <div class="ob-step" onclick="showPage('submit')">
-              <div class="ob-step-num">2</div>
-              <div class="ob-step-text">Generate your first report</div>
+            <div class="ob-check-item" id="ob-step-2" onclick="showPage('submit')">
+              <div class="ob-check-icon" id="ob-icon-2">2</div>
+              <div class="ob-check-text">
+                <div class="ob-check-label">Generate your first report</div>
+                <div class="ob-check-sub">Upload a client CSV to get started</div>
+              </div>
+              <div class="ob-check-arrow">→</div>
             </div>
-            <div class="ob-step">
-              <div class="ob-step-num">3</div>
-              <div class="ob-step-text">Share the PDF with your client</div>
+            <div class="ob-check-item ob-check-item--last" id="ob-step-3" style="cursor:default">
+              <div class="ob-check-icon" id="ob-icon-3">3</div>
+              <div class="ob-check-text">
+                <div class="ob-check-label">Share with your client</div>
+                <div class="ob-check-sub">Download the PDF and send it to your client</div>
+              </div>
+              <div class="ob-check-arrow" style="color:var(--gray-light)">—</div>
             </div>
           </div>
         </div>
@@ -1171,6 +1837,12 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
             <div class="stat-value sm" id="stat-top-client">—</div>
             <div class="stat-sub" id="stat-top-client-sub">No reports yet</div>
           </div>
+          <div class="stat-card stat-has-tip">
+            <div class="stat-tip-icon">?<span class="stat-tip-text">Clients not reported on in the last 28 days.</span></div>
+            <div class="stat-label">Reports Due</div>
+            <div class="stat-value" id="stat-due">—</div>
+            <div class="stat-sub" id="stat-due-sub">Loading…</div>
+          </div>
         </div>
 
         <!-- Recent reports card -->
@@ -1180,7 +1852,8 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
             <button class="btn-secondary" onclick="showPage('reports')" style="font-size:13px;padding:7px 14px">View all</button>
           </div>
           <div class="card-body">
-            <table class="reports-table">
+            <div id="dash-empty-checklist" style="display:none;padding:20px 20px 4px"></div>
+            <table class="reports-table" id="dash-reports-table">
               <thead>
                 <tr>
                   <th>Client</th>
@@ -1198,11 +1871,10 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
         <!-- Upgrade banner -->
         <div class="upgrade-banner" id="upgrade-banner">
           <div class="upgrade-text">
-            <strong>Upgrade to White Label</strong> to access full report history, branding controls and portal downloads.
-            Email <a href="mailto:reports@finreportai.co.uk">reports@finreportai.co.uk</a> to upgrade.
+            <strong>Upgrade to White Label</strong> to unlock firm branding, analytics, and full client portal features.
           </div>
           <div class="upgrade-actions">
-            <a href="mailto:reports@finreportai.co.uk?subject=White%20Label%20Upgrade" class="btn-upgrade">Upgrade →</a>
+            <button class="btn-upgrade" onclick="showPage('upgrade')">View plans →</button>
             <button class="btn-upgrade-dismiss" onclick="dismissUpgrade()" title="Dismiss">×</button>
           </div>
         </div>
@@ -1223,28 +1895,94 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
             </div>
           </div>
           <div class="card-body">
-            <table class="reports-table">
+            <div class="reports-table-wrap">
+            <table class="reports-table" id="all-reports-table">
               <thead>
                 <tr>
                   <th id="th-client" class="sortable" onclick="sortReports('client_name')">Client <span class="sort-arrow">↕</span></th>
                   <th id="th-period" class="sortable" onclick="sortReports('period')">Period <span class="sort-arrow">↕</span></th>
-                  <th>Type</th>
-                  <th id="th-date" class="sortable" onclick="sortReports('created_at')">Generated <span class="sort-arrow">↕</span></th>
+                  <th class="col-type">Type</th>
+                  <th id="th-date" class="col-generated sortable" onclick="sortReports('created_at')">Generated <span class="sort-arrow">↕</span></th>
                   <th>Status</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="all-reports-body"></tbody>
             </table>
+            </div>
+            <div class="report-cards-list" id="all-reports-cards"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CLIENTS ── -->
+      <div id="page-clients" class="page">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Clients</span>
+          </div>
+          <div class="card-body">
+            <div class="reports-table-wrap">
+              <table class="reports-table" id="clients-table">
+                <thead>
+                  <tr>
+                    <th>Client Name</th>
+                    <th>Total Reports</th>
+                    <th>Last Report Date</th>
+                    <th>Last Period</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="clients-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANALYTICS ── -->
+      <div id="page-analytics" class="page">
+        <div class="analytics-stats-grid" id="analytics-stats-grid"></div>
+        <div class="card">
+          <div class="card-body" style="padding:24px">
+            <div class="analytics-chart-title">Reports Per Month — Last 6 Months</div>
+            <div id="analytics-chart-wrap"></div>
           </div>
         </div>
       </div>
 
       <!-- ── SUBMIT ── -->
       <div id="page-submit" class="page">
-        <div class="card">
+        <!-- Trial paywall card — shown when trial exhausted or fraud detected -->
+        <div class="paywall-card" id="paywall-card" style="display:none">
+          <div class="paywall-icon">🔒</div>
+          <h2 class="paywall-heading" id="paywall-heading">Your free report has been used</h2>
+          <div class="paywall-gold-accent"></div>
+          <p class="paywall-sub" id="paywall-sub">Upgrade to Standard (£299/mo) or White Label (£499/mo) for unlimited reports. No setup fee.</p>
+          <div class="paywall-plans">
+            <button class="paywall-cta paywall-cta-wl" onclick="showPage('upgrade')">View upgrade options →</button>
+          </div>
+        </div>
+        <div class="card" id="submit-form-card">
           <div class="card-header"><span class="card-title">Generate New Report</span></div>
           <div class="card-body" style="padding:24px">
+            <!-- Step progress -->
+            <div class="form-steps" id="form-steps">
+              <div class="form-step active" id="fstep-1">
+                <div class="form-step-circle" id="fstep-circle-1">1</div>
+                <div class="form-step-label">Client Details</div>
+              </div>
+              <div class="form-step-conn" id="fconn-1"></div>
+              <div class="form-step" id="fstep-2">
+                <div class="form-step-circle" id="fstep-circle-2">2</div>
+                <div class="form-step-label">Upload Data</div>
+              </div>
+              <div class="form-step-conn" id="fconn-2"></div>
+              <div class="form-step" id="fstep-3">
+                <div class="form-step-circle" id="fstep-circle-3">3</div>
+                <div class="form-step-label">Generate</div>
+              </div>
+            </div>
             <div class="form-section">
               <div class="form-section-title"><div class="dot"></div>Client Details</div>
               <div class="form-grid">
@@ -1252,6 +1990,7 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
                   <label class="form-label">Client Business Name <span>*</span></label>
                   <div class="ac-wrap">
                     <input class="form-input" id="f-client-name" placeholder="Apex Consulting Ltd" autocomplete="off">
+                    <span class="field-tick" id="tick-client-name"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                     <div class="ac-dropdown" id="ac-dropdown"></div>
                   </div>
                 </div>
@@ -1262,6 +2001,10 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
                     <option value="comparison">Comparison Report (2 periods)</option>
                   </select>
                 </div>
+              </div>
+              <div class="recent-pills-wrap" id="recent-pills-wrap" style="display:none">
+                <div class="recent-pills-label">Recent clients</div>
+                <div class="recent-pills" id="recent-pills"></div>
               </div>
             </div>
             <div class="form-section">
@@ -1275,6 +2018,12 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
                   <div class="upload-hint">CSV, XLS or XLSX · Exported from Xero, QuickBooks, Sage or Excel</div>
                   <div class="upload-filename" id="upload-name-1"></div>
                 </div>
+                <div class="file-size-warn" id="file-size-warn-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r=".5" fill="currentColor"/></svg>
+                  File is <strong id="file-size-1"></strong> — large files may take longer to process
+                </div>
+                <div class="csv-validation" id="csv-validation-1"></div>
+                <div class="csv-preview-wrap" id="csv-preview-wrap-1"></div>
               </div>
               <div id="second-csv-wrapper" style="display:none" class="form-group full">
                 <label class="form-label">Comparison Period CSV <span>*</span></label>
@@ -1285,13 +2034,40 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
                   <div class="upload-hint">Prior period data for comparison</div>
                   <div class="upload-filename" id="upload-name-2"></div>
                 </div>
+                <div class="file-size-warn" id="file-size-warn-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r=".5" fill="currentColor"/></svg>
+                  File is <strong id="file-size-2"></strong> — large files may take longer to process
+                </div>
+                <div class="csv-validation" id="csv-validation-2"></div>
+                <div class="csv-preview-wrap" id="csv-preview-wrap-2"></div>
+              </div>
+              <div class="csv-hint-wrap">
+                <button class="csv-hint-trigger" type="button" id="csv-hint-btn" onclick="toggleCsvHint()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
+                  What format should my CSV be in?
+                  <svg class="csv-hint-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="csv-hint-body" id="csv-hint-body">
+                  <p>Your file should contain one row per P&amp;L line item. Pagevo works with exports from <strong>Xero</strong>, <strong>QuickBooks</strong>, <strong>Sage</strong>, and standard Excel P&amp;L templates.</p>
+                  <p><strong>Typical column headers:</strong></p>
+                  <div class="csv-hint-cols">
+                    <span class="csv-hint-col">Account</span>
+                    <span class="csv-hint-col">Category</span>
+                    <span class="csv-hint-col">Amount</span>
+                    <span class="csv-hint-col">Period</span>
+                    <span class="csv-hint-col">Description</span>
+                    <span class="csv-hint-col">Type</span>
+                  </div>
+                  <p>💡 <strong>Tip:</strong> Export directly from your accounting software using the P&amp;L or Income Statement report for the best results. Both <em>column-based</em> and <em>row-based</em> layouts are supported.</p>
+                </div>
               </div>
             </div>
             <div class="form-section">
               <div class="form-section-title"><div class="dot"></div>Additional Context</div>
               <div class="form-group full">
                 <label class="form-label">Notes for Claude</label>
-                <textarea class="form-textarea" id="f-context" placeholder="Any additional context about the business, unusual items, or specific things to highlight…"></textarea>
+                <textarea class="form-textarea" id="f-context" placeholder="Any additional context about the business, unusual items, or specific things to highlight…" oninput="updateContextCounter()"></textarea>
+                <div class="char-counter" id="f-context-counter">0 / 500</div>
               </div>
             </div>
             <div class="form-section">
@@ -1346,7 +2122,22 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
                 </div>
               </div>
             </div>
-            <div class="form-submit-row">
+            <!-- ── CSV CATEGORY REVIEW ── -->
+            <div class="csv-review-panel" id="csv-review-panel">
+              <div class="csv-review-title">Review &amp; categorise line items</div>
+              <div class="csv-review-sub">Click a category badge to change it. Confirm when the categories look right.</div>
+              <div class="csv-review-table-scroll" id="csv-review-table-wrap"></div>
+              <div class="csv-review-actions">
+                <span class="csv-review-count" id="csv-review-count"></span>
+                <button class="btn-secondary" onclick="hideCsvReview()">&#8592; Back to Upload</button>
+                <button class="btn-primary" id="csv-review-submit-btn" onclick="confirmCsvReview()">
+                  <span id="csv-review-submit-text">Confirm &amp; Submit</span>
+                  <div class="spinner" id="csv-review-submit-spinner"></div>
+                </button>
+              </div>
+            </div>
+            <div class="csv-submit-block" id="csv-submit-block">Please fix the CSV issues above before submitting</div>
+            <div class="form-submit-row" id="form-submit-row">
               <div class="submit-status" id="submit-status"></div>
               <button class="btn-secondary" onclick="showPage('dashboard')">Cancel</button>
               <button class="btn-primary" id="submit-btn" onclick="submitReport()">
@@ -1356,10 +2147,18 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
             </div>
           </div>
         </div>
-        <!-- Submission countdown -->
+        <!-- Submission confirmation + countdown -->
         <div class="countdown-card" id="countdown-card">
+          <div class="submit-confirm" id="submit-confirm">
+            <div class="submit-confirm-check">
+              <svg viewBox="0 0 24 24"><polyline class="check-mark" points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="submit-confirm-title" id="confirm-title">Report submitted!</div>
+            <p class="submit-confirm-meta" id="confirm-meta">Estimated delivery: <strong>10–15 minutes</strong></p>
+            <div class="submit-confirm-divider"></div>
+          </div>
           <div class="countdown-title">⚙️ Generating your report</div>
-          <div class="countdown-sub">Our AI is analysing your financial data. Typical time is 10–15 minutes. We'll also email it to you.</div>
+          <div class="countdown-sub" id="countdown-sub">Our AI is analysing your financial data. Typical time is 10–15 minutes.</div>
           <div class="countdown-bar-wrap">
             <div class="countdown-bar-fill" id="countdown-bar"></div>
           </div>
@@ -1428,7 +2227,11 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
                 <textarea class="form-textarea" id="s-disclaimer" style="min-height:70px" placeholder="This report has been prepared for management purposes only…"></textarea>
               </div>
             </div>
-            <div class="settings-save">
+            <div class="settings-save" style="justify-content:space-between">
+              <button class="btn-secondary" onclick="showBrandingPreview()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Preview Report Branding
+              </button>
               <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
             </div>
           </div>
@@ -1463,6 +2266,102 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
             </div>
           </div>
         </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><span class="card-title">Report Defaults</span></div>
+          <div class="card-body" style="padding:24px">
+            <div class="form-group full">
+              <label class="form-label">Default Notes</label>
+              <textarea class="form-textarea" id="s-default-notes" style="min-height:80px" placeholder="Text that will be pre-filled in Notes for Claude on every new report…"></textarea>
+              <div style="font-size:12px;color:var(--gray);margin-top:6px">Pre-filled in the Notes field when starting a new report. You can still edit it per report.</div>
+            </div>
+            <div class="settings-save">
+              <button class="btn-primary" onclick="saveSettings()">Save Defaults</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><span class="card-title">Subscription</span></div>
+          <div class="card-body" style="padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:14px;font-weight:600;color:var(--text)" id="sub-plan-label">—</div>
+                <div style="font-size:13px;color:var(--gray);margin-top:3px">Your current billing plan</div>
+              </div>
+              <button class="btn-secondary" onclick="showPage('upgrade')">Change or cancel subscription →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── UPGRADE ── -->
+      <div id="page-upgrade" class="page">
+        <div class="upg-page-header">
+          <h1 class="upg-page-heading">Choose your plan</h1>
+          <p class="upg-page-sub">Unlimited reports. Professional PDF output. Cancel anytime.</p>
+          <div class="billing-toggle">
+            <button class="billing-toggle-btn active" onclick="setBillingPeriod('monthly',this)">Monthly</button>
+            <button class="billing-toggle-btn" onclick="setBillingPeriod('6month',this)">6 Months <span class="billing-toggle-save">Save 17%</span></button>
+            <button class="billing-toggle-btn" onclick="setBillingPeriod('annual',this)">Annual <span class="billing-toggle-save">Save 33%</span></button>
+          </div>
+        </div>
+
+        <div class="plan-cards-grid">
+          <!-- Standard -->
+          <div class="plan-card">
+            <div class="plan-name">Standard</div>
+            <div class="plan-price-row">
+              <span class="plan-price-sym">£</span>
+              <span class="plan-price-num" id="upg-std-price">299</span>
+              <span class="plan-price-period">/mo</span>
+            </div>
+            <div class="plan-billed-note" id="upg-std-note">&nbsp;</div>
+            <ul class="plan-features">
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Unlimited reports</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Plain English summaries</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Visual charts &amp; health score</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Forecast &amp; recommendations</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Flags &amp; risk highlights</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Comparison reports</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Xero / QuickBooks / Sage / Excel</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>PDF in under 2 minutes</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>UK GDPR compliant</li>
+              <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Pagevo branding on reports</li>
+            </ul>
+            <a id="upg-std-cta" href="https://buy.stripe.com/7sY4gr24W8pEgYRdTLes001" target="_blank" class="plan-cta plan-cta-standard">Get Started →</a>
+          </div>
+
+          <!-- White Label -->
+          <div class="plan-card featured">
+            <div class="plan-badge">⭐ Most Popular</div>
+            <div class="plan-name">White Label</div>
+            <div class="plan-price-row">
+              <span class="plan-price-sym">£</span>
+              <span class="plan-price-num" id="upg-wl-price">499</span>
+              <span class="plan-price-period">/mo</span>
+            </div>
+            <div class="plan-billed-note" id="upg-wl-note">&nbsp;</div>
+            <ul class="plan-features">
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Everything in Standard</li>
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Firm name &amp; logo on every report</li>
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Brand colours throughout</li>
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Tagline &amp; contact details</li>
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Custom disclaimer</li>
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Full client portal with report history &amp; downloads</li>
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Analytics dashboard</li>
+              <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Zero Pagevo branding</li>
+            </ul>
+            <a id="upg-wl-cta" href="https://buy.stripe.com/6oU5kvbFwbBQ9wpbLDes002" target="_blank" class="plan-cta plan-cta-wl">Get Started →</a>
+          </div>
+        </div>
+
+        <div class="trust-strip">
+          No setup fee<span class="trust-strip-dot">·</span>Cancel anytime<span class="trust-strip-dot">·</span>First report free<span class="trust-strip-dot">·</span>Secure payment via Stripe
+        </div>
+
+        <div class="manage-sub">
+          <div class="manage-sub-text"><strong>Already subscribed?</strong> Manage your billing, change plan, or cancel your subscription.</div>
+          <a href="https://billing.stripe.com/p/login/5kQ7sDaBs8pE381bLDes000" target="_blank" class="btn-secondary">Manage subscription →</a>
+        </div>
       </div>
 
     </div><!-- /content -->
@@ -1479,17 +2378,36 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Reports
       </div>
+      <div class="mobile-nav-item" onclick="showPage('clients')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Clients
+      </div>
       <div class="mobile-nav-item" onclick="showPage('submit')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         New
       </div>
-      <div class="mobile-nav-item" onclick="showPage('settings')">
+      <div class="mobile-nav-item upgrade-nav" onclick="showPage('upgrade')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Upgrade<span class="upgrade-nav-dot" id="upgrade-dot-mobile" style="display:none"></span>
+      </div>
+      <div class="mobile-nav-item settings-nav" onclick="showPage('settings')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         Settings
       </div>
     </div>
   </nav>
 </div><!-- /app -->
+
+<!-- Branding preview modal -->
+<div class="bp-modal hidden" id="bp-modal" onclick="if(event.target===this)closeBrandingPreview()">
+  <div class="bp-panel">
+    <div class="bp-panel-head">
+      <span class="bp-panel-title">Report Branding Preview</span>
+      <button class="bp-close" onclick="closeBrandingPreview()">✕</button>
+    </div>
+    <div class="bp-preview-body" id="bp-preview-body"></div>
+  </div>
+</div>
 
 <!-- Report preview panel -->
 <div class="panel-overlay" id="panel-overlay" onclick="closeReportPanel()"></div>
@@ -1549,7 +2467,7 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
 <div class="toast" id="toast"></div>
 
 <!-- ══ AI CHAT WIDGET ══ -->
-<button class="chat-trigger" id="chat-trigger" onclick="toggleChat()" aria-label="AI Assistant (Beta)">
+<button class="chat-trigger" id="chat-trigger" onclick="toggleChat()" aria-label="AI Assistant (Beta)" style="display:none">
   <span class="chat-trigger-pulse"></span>
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
   <span class="chat-dot active" id="chat-dot"></span>
@@ -1560,7 +2478,7 @@ html.dark .upgrade-banner{background:rgba(201,168,76,.06);border-color:rgba(201,
     <div class="chat-head-icon">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E8A7A" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     </div>
-    <span class="chat-head-title">FinReportAI Assistant</span>
+    <span class="chat-head-title">Pagevo Assistant</span>
     <span class="chat-beta">BETA</span>
     <button class="chat-close" onclick="toggleChat()" aria-label="Close">✕</button>
   </div>
@@ -1619,6 +2537,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       e.target.value === 'comparison' ? 'block' : 'none';
   });
 
+  document.getElementById('f-client-name')?.addEventListener('input', updateFormProgress);
+
   // Close bell on outside click
   document.addEventListener('click', e => {
     const wrap = document.getElementById('bell-wrap');
@@ -1659,11 +2579,26 @@ window.signUp = async function() {
   const password = document.getElementById('signup-password').value;
   if (!firm || !email || !password) { showAuthError('Please fill in all fields.'); return; }
   if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+
+  // Email domain deduplication — block free trial if domain already used by a non-paying account
+  const domain = email.split('@')[1]?.toLowerCase();
+  const freeEmailDomains = ['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','protonmail.com','me.com','live.com','msn.com'];
+  if (domain && !freeEmailDomains.includes(domain)) {
+    const { data: domainFirms } = await sb.from('firms').select('id, active').ilike('email', '%@' + domain);
+    if (domainFirms && domainFirms.length > 0) {
+      const hasActivePaying = domainFirms.some(f => f.active === true);
+      if (!hasActivePaying) {
+        showAuthError('A free trial from this email domain already exists. Please upgrade to continue, or contact reports@pagevo.co.uk.');
+        return;
+      }
+    }
+  }
+
   setAuthLoading(true, 'signup');
   const { data, error } = await sb.auth.signUp({ email, password });
   if (error) { setAuthLoading(false, 'signup'); showAuthError(error.message); return; }
   if (data.user) {
-    await sb.from('firms').insert({ id: data.user.id, email, firm_name: firm, plan: 'standard' });
+    await sb.from('firms').insert({ id: data.user.id, email, firm_name: firm, plan: 'standard', active: false });
   }
   setAuthLoading(false, 'signup');
   showAuthError('Account created! Check your email to confirm, then sign in.', 'success');
@@ -1687,42 +2622,39 @@ window.setAuthLoading = function(loading, form) {
 window.loadFirm = async function() {
   const { data } = await sb.from('firms').select('*').eq('id', currentUser.id).single();
   currentFirm = data;
-
-  // ── ACTIVATION GATE ───────────────────────────────────────────────────
-  if (currentFirm && currentFirm.active === false) {
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('pending-email').textContent = currentUser.email || 'your registered address';
-    document.getElementById('pending-screen').classList.add('show');
-    return; // stop — do not load portal content
-  }
   document.getElementById('pending-screen').classList.remove('show');
-  // ─────────────────────────────────────────────────────────────────────
 
   if (currentFirm) {
+    const isTrial = currentFirm.active === false;
+    const isWhiteLabel = currentFirm.plan === 'white_label' || currentFirm.plan === 'white_label_pro';
+
     document.getElementById('sidebar-firm-name').textContent = currentFirm.firm_name || 'Your Firm';
     document.getElementById('sidebar-avatar').textContent = (currentFirm.firm_name || 'F')[0].toUpperCase();
-    document.getElementById('sidebar-plan').textContent =
-      currentFirm.plan === 'white_label' ? 'White Label' :
-      currentFirm.plan === 'white_label_pro' ? 'White Label Pro' : 'Standard';
+    document.getElementById('sidebar-plan').textContent = isTrial ? 'Free Trial' :
+      isWhiteLabel ? (currentFirm.plan === 'white_label_pro' ? 'White Label Pro' : 'White Label') : 'Standard';
 
-    const isWhiteLabel = currentFirm.plan === 'white_label' || currentFirm.plan === 'white_label_pro';
+    // Analytics tab is White Label only
     if (!isWhiteLabel) {
-      document.querySelectorAll('.nav-item').forEach(n => {
-        if (n.getAttribute('onclick')?.includes('reports') || n.getAttribute('onclick')?.includes('settings'))
-          n.style.display = 'none';
-      });
-      document.querySelectorAll('.mobile-nav-item').forEach(n => {
-        if (n.getAttribute('onclick')?.includes('reports') || n.getAttribute('onclick')?.includes('settings'))
-          n.style.display = 'none';
-      });
-      document.querySelector('.topbar-actions').style.display = 'none';
-      showPage('submit');
-      // Show upgrade banner for standard users
+      document.querySelectorAll('.analytics-nav').forEach(n => { n.style.display = 'none'; });
+    }
+
+    if (isTrial) {
+      // Free trial — full portal access, show trial banner, paywall enforced on submit
+      document.getElementById('trial-banner')?.classList.add('show');
+      document.querySelectorAll('.upgrade-nav').forEach(n => { n.style.display = ''; });
+      document.getElementById('upgrade-dot-sidebar')?.style.setProperty('display', 'inline-block');
+      document.getElementById('upgrade-dot-mobile')?.style.setProperty('display', 'inline-block');
+      populateSettings();
+    } else if (!isWhiteLabel) {
+      // Active standard plan — hide Settings and Analytics only; land on dashboard
+      document.querySelectorAll('.settings-nav').forEach(n => { n.style.display = 'none'; });
+      // analytics-nav already hidden above for all non-WL users
+      document.querySelectorAll('.upgrade-nav').forEach(n => { n.style.display = ''; });
       if (!localStorage.getItem('fr_upgrade_dismissed')) {
         document.getElementById('upgrade-banner').classList.add('show');
       }
     } else {
+      // Active white label — full access
       populateSettings();
     }
   }
@@ -1730,6 +2662,11 @@ window.loadFirm = async function() {
   resetIdleTimer();
   await loadReports();
   setupRealtime();
+
+  // After reports loaded, check if trial paywall should show
+  if (currentFirm?.active === false) {
+    checkTrialPaywall();
+  }
 };
 
 // ── LOAD REPORTS ──────────────────────────────────────────────────────────
@@ -1744,6 +2681,7 @@ window.loadReports = async function() {
   renderReports();
   checkOnboarding();
   updateClientAutocomplete();
+  updateRecentPills();
 };
 
 // ── REALTIME ──────────────────────────────────────────────────────────────
@@ -1838,11 +2776,10 @@ window.renderDashboardStats = function() {
     document.getElementById('stat-latest').textContent = latest.client_name;
     document.getElementById('stat-latest-sub').textContent = formatDate(latest.created_at);
   } else {
-    document.getElementById('stat-latest').textContent = '—';
+    document.getElementById('stat-latest').textContent = '0';
     document.getElementById('stat-latest-sub').textContent = 'No reports yet';
   }
 
-  // Most active client
   if (allReports.length > 0) {
     const counts = {};
     allReports.forEach(r => { counts[r.client_name] = (counts[r.client_name] || 0) + 1; });
@@ -1851,11 +2788,79 @@ window.renderDashboardStats = function() {
     document.getElementById('stat-top-client-sub').textContent =
       topCount + ' report' + (topCount !== 1 ? 's' : '');
   } else {
-    document.getElementById('stat-top-client').textContent = '—';
+    document.getElementById('stat-top-client').textContent = '0';
     document.getElementById('stat-top-client-sub').textContent = 'No reports yet';
   }
 
-  renderReportRows('dashboard-reports-body', allReports.slice(0, 5), false);
+  // Reports Due: unique clients whose last report is > 28 days ago
+  const nowMs = Date.now();
+  const clientLatest = {};
+  allReports.forEach(r => {
+    const t = new Date(r.created_at).getTime();
+    if (!clientLatest[r.client_name] || t > clientLatest[r.client_name]) clientLatest[r.client_name] = t;
+  });
+  const dueCount = Object.values(clientLatest).filter(t => nowMs - t > 28 * 86400000).length;
+  const dueEl = document.getElementById('stat-due');
+  const dueSubEl = document.getElementById('stat-due-sub');
+  if (dueEl) {
+    dueEl.textContent = dueCount;
+    dueEl.style.color = dueCount === 0 ? 'var(--green)' : '';
+  }
+  if (dueSubEl) dueSubEl.textContent = dueCount === 0 ? 'All up to date' : (dueCount === 1 ? '1 client overdue' : dueCount + ' clients overdue');
+
+  // Dashboard empty state: show onboarding checklist in card, hide table
+  const emptyEl = document.getElementById('dash-empty-checklist');
+  const tableEl = document.getElementById('dash-reports-table');
+  if (allReports.length === 0) {
+    if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.innerHTML = buildDashEmptyHtml(); }
+    if (tableEl) tableEl.style.display = 'none';
+  } else {
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (tableEl) tableEl.style.display = '';
+    renderReportRows('dashboard-reports-body', allReports.slice(0, 5), false);
+  }
+};
+
+// ── DASHBOARD EMPTY HTML ──────────────────────────────────────────────────
+window.buildDashEmptyHtml = function() {
+  const hasBranding = !!(currentFirm?.logo_url && currentFirm?.primary_colour && currentFirm?.accent_colour);
+  const s = (num, done, label, sub, onclick) => {
+    const arrow = done ? '' : `<div class="ob-check-arrow" style="${num===3?'color:var(--gray-light)':''}">→</div>`;
+    return `<div class="ob-check-item${done?' ob-done':''}" style="padding:11px 0;border-bottom:${num<3?'1px solid var(--gray-light)':'none'};cursor:${onclick&&!done?'pointer':'default'}" ${onclick&&!done?`onclick="${onclick}"`:''}>`+
+      `<div class="ob-check-icon${done?' ob-ticked':''}">${done?'✓':num}</div>`+
+      `<div class="ob-check-text"><div class="ob-check-label">${label}</div><div class="ob-check-sub">${sub}</div></div>`+
+      arrow + `</div>`;
+  };
+  return `<div style="text-align:center;padding:6px 0 18px">
+    <svg width="84" height="72" viewBox="0 0 84 72" fill="none" style="display:block;margin:0 auto 12px">
+      <!-- Chart panel -->
+      <rect x="4" y="4" width="76" height="52" rx="8" fill="#E6F4F2" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".28"/>
+      <!-- Y axis -->
+      <line x1="16" y1="11" x2="16" y2="46" stroke="#0E8A7A" stroke-opacity=".32" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- X axis -->
+      <line x1="16" y1="46" x2="72" y2="46" stroke="#0E8A7A" stroke-opacity=".32" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- Grid lines -->
+      <line x1="16" y1="36" x2="72" y2="36" stroke="#9CA3AF" stroke-opacity=".14" stroke-width="1"/>
+      <line x1="16" y1="26" x2="72" y2="26" stroke="#9CA3AF" stroke-opacity=".14" stroke-width="1"/>
+      <line x1="16" y1="17" x2="72" y2="17" stroke="#9CA3AF" stroke-opacity=".1" stroke-width="1"/>
+      <!-- Dashed trend line (potential path) -->
+      <path d="M20 44 C30 36 40 28 52 21 C59 17 64 14 68 12" stroke="#0E8A7A" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 3.5" stroke-opacity=".55"/>
+      <!-- Start dot (hollow, waiting) -->
+      <circle cx="20" cy="44" r="4" fill="white" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".5"/>
+      <!-- Target (gold ring = goal) -->
+      <circle cx="68" cy="12" r="8" fill="none" stroke="#D4AF37" stroke-width="2" stroke-opacity=".8"/>
+      <circle cx="68" cy="12" r="4" fill="#D4AF37" fill-opacity=".72"/>
+      <!-- Small sparkle star (bottom-left) -->
+      <path d="M5 60 L6 63 L9 64 L6 65 L5 68 L4 65 L1 64 L4 63 Z" fill="#D4AF37" fill-opacity=".65"/>
+      <!-- Accent dot -->
+      <circle cx="78" cy="60" r="2" fill="#0E8A7A" fill-opacity=".22"/>
+    </svg>
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px">Your growth starts here</div>
+    <div style="font-size:12.5px;color:var(--gray);line-height:1.55;margin-bottom:16px">Complete these steps to generate your first client report.</div>
+  </div>`+
+    s(1,hasBranding,'Complete your branding','Add your logo and brand colours',"showPage('settings')")+
+    s(2,false,'Generate your first report','Upload a client CSV to get started',"showPage('submit')")+
+    s(3,false,'Share with your client','Download the PDF and send it to your client','');
 };
 
 // ── RENDER REPORTS ────────────────────────────────────────────────────────
@@ -1882,6 +2887,7 @@ window.renderReports = function() {
     return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
   });
   renderReportRows('all-reports-body', filtered, true);
+  renderReportCards(filtered);
   updateSortHeaders();
   requestAnimationFrame(setupAllSwipe);
 };
@@ -1895,18 +2901,42 @@ window.renderReportRows = function(tbodyId, reports, showType) {
   if (!reports.length) {
     tbody.innerHTML = `<tr><td colspan="${cols}">
       <div class="empty-state">
-        <svg class="empty-illustration" width="120" height="96" viewBox="0 0 120 96" fill="none">
-          <rect x="22" y="8" width="62" height="80" rx="6" fill="#E6F4F2" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".4"/>
-          <rect x="32" y="24" width="42" height="5" rx="2.5" fill="#0E8A7A" fill-opacity=".25"/>
-          <rect x="32" y="36" width="34" height="4" rx="2" fill="#6B7280" fill-opacity=".18"/>
-          <rect x="32" y="47" width="38" height="4" rx="2" fill="#6B7280" fill-opacity=".18"/>
-          <rect x="32" y="58" width="28" height="4" rx="2" fill="#6B7280" fill-opacity=".18"/>
-          <circle cx="88" cy="72" r="18" fill="white" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".5"/>
-          <line x1="88" y1="64" x2="88" y2="80" stroke="#0E8A7A" stroke-width="2" stroke-linecap="round"/>
-          <line x1="80" y1="72" x2="96" y2="72" stroke="#0E8A7A" stroke-width="2" stroke-linecap="round"/>
+        <svg class="empty-illustration" width="128" height="104" viewBox="0 0 128 104" fill="none">
+          <!-- Back page -->
+          <rect x="26" y="14" width="56" height="72" rx="5" fill="#C5E7E4" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".28"/>
+          <!-- Mid page -->
+          <rect x="18" y="9" width="58" height="72" rx="5" fill="#DAEEED" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".42"/>
+          <!-- Front page -->
+          <rect x="10" y="4" width="60" height="74" rx="5" fill="white" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".72"/>
+          <!-- Header band -->
+          <rect x="10" y="4" width="60" height="18" rx="5" fill="#0E8A7A" fill-opacity=".09"/>
+          <rect x="10" y="18" width="60" height="4" fill="#0E8A7A" fill-opacity=".04"/>
+          <!-- Document title pill -->
+          <rect x="19" y="9" width="30" height="6" rx="3" fill="#0E8A7A" fill-opacity=".52"/>
+          <!-- Gold corner dot -->
+          <circle cx="62" cy="12" r="3" fill="#D4AF37" fill-opacity=".65"/>
+          <!-- Text lines -->
+          <rect x="19" y="29" width="42" height="3.5" rx="1.75" fill="#9CA3AF" fill-opacity=".28"/>
+          <rect x="19" y="37" width="34" height="3.5" rx="1.75" fill="#9CA3AF" fill-opacity=".2"/>
+          <rect x="19" y="45" width="38" height="3.5" rx="1.75" fill="#9CA3AF" fill-opacity=".16"/>
+          <!-- Divider -->
+          <line x1="10" y1="53" x2="70" y2="53" stroke="#E5E7EB" stroke-width="1"/>
+          <!-- Bar chart -->
+          <rect x="19" y="64" width="8" height="13" rx="2" fill="#0E8A7A" fill-opacity=".22"/>
+          <rect x="29" y="57" width="8" height="20" rx="2" fill="#0E8A7A" fill-opacity=".38"/>
+          <rect x="39" y="62" width="8" height="15" rx="2" fill="#0E8A7A" fill-opacity=".25"/>
+          <rect x="49" y="53" width="8" height="24" rx="2" fill="#D4AF37" fill-opacity=".65"/>
+          <!-- Chart baseline -->
+          <line x1="17" y1="79" x2="61" y2="79" stroke="#E5E7EB" stroke-width="1"/>
+          <!-- Gold 4-point star -->
+          <path d="M103 20 L104.9 26 L111 28 L104.9 30 L103 36 L101.1 30 L95 28 L101.1 26 Z" fill="#D4AF37" fill-opacity=".9"/>
+          <!-- Accent dots -->
+          <circle cx="91" cy="13" r="2.5" fill="#D4AF37" fill-opacity=".52"/>
+          <circle cx="115" cy="44" r="2" fill="#0E8A7A" fill-opacity=".22"/>
+          <circle cx="89" cy="44" r="1.5" fill="#0E8A7A" fill-opacity=".18"/>
         </svg>
-        <h3 class="empty-title">No reports yet</h3>
-        <p class="empty-sub">Generate your first report to see analytics and history here.</p>
+        <h3 class="empty-title">No reports generated yet</h3>
+        <p class="empty-sub">Upload a client's financial data to generate your first professional analysis.</p>
         <button class="empty-cta" onclick="showPage('submit')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Generate first report
@@ -1923,7 +2953,7 @@ window.renderReportRows = function(tbodyId, reports, showType) {
       ? '<span class="badge badge-green">Delivered</span>'
       : '<span class="badge badge-amber">Processing</span>';
     const typeHtml = showType
-      ? `<td><span class="badge ${r.report_type==='comparison'?'badge-amber':'badge-green'}">${r.report_type==='comparison'?'Comparison':'Standard'}</span></td>`
+      ? `<td class="col-type"><span class="badge ${r.report_type==='comparison'?'badge-amber':'badge-green'}">${r.report_type==='comparison'?'Comparison':'Standard'}</span></td>`
       : '';
     const dlReveal = r.pdf_url
       ? `<div class="swipe-dl-reveal"><button onclick="event.stopPropagation();downloadReport('${r.pdf_url}','${escHtml(r.client_name)}')">
@@ -1935,20 +2965,81 @@ window.renderReportRows = function(tbodyId, reports, showType) {
            PDF
          </button>`
       : `<span style="font-size:12px;color:var(--gray)">${delivered?'Email sent':'In progress…'}</span>`;
+    const regenBtn = (isAllReports && delivered)
+      ? `<button class="btn-regen" onclick="event.stopPropagation();regenReport('${r.id}','${escHtml(r.client_name)}')">↺ Regen</button>`
+      : '';
     const swipeAttr = isAllReports ? ' data-sw="1"' : '';
     const dlCellClass = isAllReports ? ' class="swipe-dl-cell"' : '';
     return `<tr onclick="openReportPanel('${r.id}')"${swipeAttr}>
       <td style="font-weight:500">${escHtml(r.client_name)}</td>
       <td style="color:var(--gray)">${r.period||'—'}</td>
       ${typeHtml}
-      <td style="color:var(--gray)">${formatDate(r.created_at)}</td>
+      <td class="col-generated" style="color:var(--gray)">${formatDate(r.created_at)}</td>
       <td>${badgeHtml}</td>
-      <td${dlCellClass}>${dlBtn}${isAllReports ? dlReveal : ''}</td>
+      <td${dlCellClass}>${dlBtn}${regenBtn}${isAllReports ? dlReveal : ''}</td>
     </tr>`;
   }).join('');
   if (isAllReports && reports.length > 0) {
     tbody.insertAdjacentHTML('afterbegin', '<tr><td colspan="6" class="swipe-hint">← Swipe a row left to reveal download</td></tr>');
   }
+};
+
+// ── REPORT CARDS (mobile) ─────────────────────────────────────────────────
+window.renderReportCards = function(reports) {
+  const wrap = document.getElementById('all-reports-cards');
+  if (!wrap) return;
+  if (!reports.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:40px 20px">
+      <svg class="empty-illustration" width="108" height="90" viewBox="0 0 128 104" fill="none">
+        <rect x="26" y="14" width="56" height="72" rx="5" fill="#C5E7E4" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".28"/>
+        <rect x="18" y="9" width="58" height="72" rx="5" fill="#DAEEED" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".42"/>
+        <rect x="10" y="4" width="60" height="74" rx="5" fill="white" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".72"/>
+        <rect x="10" y="4" width="60" height="18" rx="5" fill="#0E8A7A" fill-opacity=".09"/>
+        <rect x="10" y="18" width="60" height="4" fill="#0E8A7A" fill-opacity=".04"/>
+        <rect x="19" y="9" width="30" height="6" rx="3" fill="#0E8A7A" fill-opacity=".52"/>
+        <circle cx="62" cy="12" r="3" fill="#D4AF37" fill-opacity=".65"/>
+        <rect x="19" y="29" width="42" height="3.5" rx="1.75" fill="#9CA3AF" fill-opacity=".28"/>
+        <rect x="19" y="37" width="34" height="3.5" rx="1.75" fill="#9CA3AF" fill-opacity=".2"/>
+        <rect x="19" y="45" width="38" height="3.5" rx="1.75" fill="#9CA3AF" fill-opacity=".16"/>
+        <line x1="10" y1="53" x2="70" y2="53" stroke="#E5E7EB" stroke-width="1"/>
+        <rect x="19" y="64" width="8" height="13" rx="2" fill="#0E8A7A" fill-opacity=".22"/>
+        <rect x="29" y="57" width="8" height="20" rx="2" fill="#0E8A7A" fill-opacity=".38"/>
+        <rect x="39" y="62" width="8" height="15" rx="2" fill="#0E8A7A" fill-opacity=".25"/>
+        <rect x="49" y="53" width="8" height="24" rx="2" fill="#D4AF37" fill-opacity=".65"/>
+        <line x1="17" y1="79" x2="61" y2="79" stroke="#E5E7EB" stroke-width="1"/>
+        <path d="M103 20 L104.9 26 L111 28 L104.9 30 L103 36 L101.1 30 L95 28 L101.1 26 Z" fill="#D4AF37" fill-opacity=".9"/>
+        <circle cx="91" cy="13" r="2.5" fill="#D4AF37" fill-opacity=".52"/>
+        <circle cx="115" cy="44" r="2" fill="#0E8A7A" fill-opacity=".22"/>
+      </svg>
+      <h3 class="empty-title">No reports generated yet</h3>
+      <p class="empty-sub">Upload a client's financial data to generate your first professional analysis.</p>
+      <button class="empty-cta" onclick="showPage('submit')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Generate first report
+      </button>
+    </div>`;
+    return;
+  }
+  wrap.innerHTML = reports.map(r => {
+    const delivered = isDelivered(r);
+    const badge = delivered
+      ? '<span class="badge badge-green">Delivered</span>'
+      : '<span class="badge badge-amber">Processing</span>';
+    const dlBtn = r.pdf_url
+      ? `<button class="btn-download" onclick="event.stopPropagation();downloadReport('${r.pdf_url}','${escHtml(r.client_name)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>`
+      : `<span style="font-size:12px;color:var(--gray)">${delivered?'Email sent':'In progress…'}</span>`;
+    return `<div class="report-card" onclick="openReportPanel('${r.id}')">
+      <div class="report-card-head">
+        <div class="report-card-name">${escHtml(r.client_name)}</div>
+        ${badge}
+      </div>
+      <div class="report-card-meta">${r.period||'—'} · ${r.report_type==='comparison'?'Comparison':'Standard'}</div>
+      <div class="report-card-foot">
+        <span class="report-card-date">${formatDate(r.created_at)}</span>
+        ${dlBtn}
+      </div>
+    </div>`;
+  }).join('');
 };
 
 window.downloadReport = function(url, clientName) {
@@ -1959,16 +3050,32 @@ window.downloadReport = function(url, clientName) {
 
 // ── ONBOARDING ────────────────────────────────────────────────────────────
 window.checkOnboarding = function() {
-  if (localStorage.getItem('fr_onboarding_dismissed')) return;
+  const checklist = document.getElementById('ob-checklist');
+  if (!checklist) return;
+  if (localStorage.getItem('fr_onboarding_dismissed')) { checklist.style.display = 'none'; return; }
+  const hasBranding = !!(currentFirm?.logo_url && currentFirm?.primary_colour && currentFirm?.accent_colour);
   const hasReports = allReports.length > 0;
-  const hasLogo = !!(currentFirm?.logo_url);
-  const banner = document.getElementById('ob-banner');
-  if (!hasReports && !hasLogo) banner.classList.add('show');
+  setObStep(1, hasBranding);
+  setObStep(2, hasReports);
+  setObStep(3, hasReports);
+  if (!hasBranding || !hasReports) checklist.style.display = 'block';
+  else checklist.style.display = 'none';
+};
+
+window.setObStep = function(num, done) {
+  const icon = document.getElementById('ob-icon-' + num);
+  const item = document.getElementById('ob-step-' + num);
+  if (!icon || !item) return;
+  icon.className = 'ob-check-icon' + (done ? ' ob-ticked' : '');
+  icon.textContent = done ? '✓' : num;
+  item.classList.toggle('ob-done', done);
+  const arrow = item.querySelector('.ob-check-arrow');
+  if (arrow) arrow.style.display = done ? 'none' : '';
 };
 
 window.dismissOnboarding = function() {
   localStorage.setItem('fr_onboarding_dismissed', '1');
-  document.getElementById('ob-banner').classList.remove('show');
+  document.getElementById('ob-checklist').style.display = 'none';
 };
 
 // ── QUICK ACTIONS ─────────────────────────────────────────────────────────
@@ -2031,7 +3138,20 @@ window.addNotification = function(report) {
 window.renderNotifications = function() {
   const list = document.getElementById('bell-list');
   if (!notifications.length) {
-    list.innerHTML = '<div class="bell-empty-msg">No notifications yet</div>';
+    list.innerHTML = `<div class="bell-empty-state">
+      <svg width="64" height="60" viewBox="0 0 64 60" fill="none">
+        <circle cx="32" cy="30" r="26" fill="#E6F4F2" fill-opacity=".55"/>
+        <path d="M32 10 C32 10 20 20 20 33 L20 43 L44 43 L44 33 C44 20 32 10 32 10 Z" fill="white" stroke="#0E8A7A" stroke-width="1.5" stroke-opacity=".72" stroke-linejoin="round"/>
+        <rect x="28" y="7" width="8" height="7" rx="3.5" fill="#0E8A7A" fill-opacity=".35"/>
+        <path d="M27 43 Q32 51 37 43" fill="none" stroke="#0E8A7A" stroke-width="1.5" stroke-linecap="round" stroke-opacity=".65"/>
+        <path d="M50 13 L51.2 16.2 L54.5 17 L51.2 17.8 L50 21 L48.8 17.8 L45.5 17 L48.8 16.2 Z" fill="#D4AF37" fill-opacity=".85"/>
+        <circle cx="13" cy="17" r="2" fill="#D4AF37" fill-opacity=".5"/>
+        <circle cx="54" cy="30" r="1.5" fill="#0E8A7A" fill-opacity=".38"/>
+        <circle cx="11" cy="36" r="1" fill="#0E8A7A" fill-opacity=".3"/>
+      </svg>
+      <div class="bell-empty-title">All caught up</div>
+      <div class="bell-empty-sub">You'll be notified here when a report is ready.</div>
+    </div>`;
     return;
   }
   list.innerHTML = notifications.map(n => `
@@ -2056,6 +3176,30 @@ window.clearNotifications = function() {
   document.getElementById('bell-dropdown').classList.remove('open');
 };
 
+// ── UPGRADE PAGE ──────────────────────────────────────────────────────────
+window.setBillingPeriod = function(period, btn) {
+  document.querySelectorAll('.billing-toggle-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const data = {
+    monthly:  { std:'299', stdNote:' ', wl:'499', wlNote:' ',
+                stdUrl:'https://buy.stripe.com/7sY4gr24W8pEgYRdTLes001',
+                wlUrl:'https://buy.stripe.com/6oU5kvbFwbBQ9wpbLDes002' },
+    '6month': { std:'249', stdNote:'Billed £1,494 every 6 months', wl:'419', wlNote:'Billed £2,514 every 6 months',
+                stdUrl:'https://buy.stripe.com/6oU9ALgZQcFUbExeXPes003',
+                wlUrl:'https://buy.stripe.com/dRm3cn10SfS6gYR4jbes005' },
+    annual:   { std:'199', stdNote:'Billed £2,388 per year', wl:'349', wlNote:'Billed £4,188 per year',
+                stdUrl:'https://buy.stripe.com/dRm28jfVM6hwfUN9Dves004',
+                wlUrl:'https://buy.stripe.com/aFa28j8tkgWa0ZT6rjes006' }
+  };
+  const p = data[period] || data.monthly;
+  document.getElementById('upg-std-price').textContent = p.std;
+  document.getElementById('upg-std-note').textContent  = p.stdNote;
+  document.getElementById('upg-wl-price').textContent  = p.wl;
+  document.getElementById('upg-wl-note').textContent   = p.wlNote;
+  document.getElementById('upg-std-cta').href = p.stdUrl;
+  document.getElementById('upg-wl-cta').href  = p.wlUrl;
+};
+
 // ── UPGRADE BANNER ────────────────────────────────────────────────────────
 window.dismissUpgrade = function() {
   localStorage.setItem('fr_upgrade_dismissed', '1');
@@ -2063,7 +3207,17 @@ window.dismissUpgrade = function() {
 };
 
 // ── SUBMIT REPORT ─────────────────────────────────────────────────────────
-window.submitReport = async function() {
+window.submitReport = async function(categorisedItems) {
+  // ── Trial gate ────────────────────────────────────────────────────────
+  if (currentFirm?.active === false) {
+    if (allReports.length >= 1) { showPaywall('used'); return; }
+    const fp = await generateBrowserFingerprint();
+    const ip = await getClientIP();
+    const isFraud = await checkTrialFraud(fp, ip);
+    if (isFraud) { showPaywall('fraud'); return; }
+  }
+  // ─────────────────────────────────────────────────────────────────────
+
   const clientName = document.getElementById('f-client-name').value.trim();
   const csvFile = document.getElementById('csv-file-1').files[0];
   const reportType = document.getElementById('f-report-type').value;
@@ -2085,6 +3239,13 @@ window.submitReport = async function() {
       csv2Text = await readFile(document.getElementById('csv-file-2').files[0]);
     }
 
+    // Gather fingerprint+IP for trial recording (run in parallel, non-blocking for paid)
+    let _trialFp = '', _trialIp = '';
+    if (currentFirm?.active === false) {
+      [_trialFp, _trialIp] = await Promise.all([generateBrowserFingerprint(), getClientIP()]);
+    }
+
+    const isWL = currentFirm?.plan === 'white_label' || currentFirm?.plan === 'white_label_pro';
     const payload = {
       client_business_name: clientName,
       report_type: reportType,
@@ -2092,13 +3253,13 @@ window.submitReport = async function() {
       csv_data_2: csv2Text,
       additional_context: document.getElementById('f-context').value,
       firm_id: currentUser.id,
-      white_label_firm: currentFirm?.firm_name || '',
-      white_label_logo: currentFirm?.logo_url || '',
-      white_label_primary_colour: currentFirm?.primary_colour || '',
-      white_label_accent_colour: currentFirm?.accent_colour || '',
-      white_label_tagline: currentFirm?.tagline || '',
-      white_label_contact: currentFirm?.contact || '',
-      white_label_disclaimer: currentFirm?.disclaimer || '',
+      white_label_firm: isWL ? (currentFirm?.firm_name || '') : '',
+      white_label_logo: isWL ? (currentFirm?.logo_url || '') : '',
+      white_label_primary_colour: isWL ? (currentFirm?.primary_colour || '') : '',
+      white_label_accent_colour: isWL ? (currentFirm?.accent_colour || '') : '',
+      white_label_tagline: isWL ? (currentFirm?.tagline || '') : '',
+      white_label_contact: isWL ? (currentFirm?.contact || '') : '',
+      white_label_disclaimer: isWL ? (currentFirm?.disclaimer || '') : '',
       cash_operating: document.getElementById('f-cash-op').value || '',
       cash_investing: document.getElementById('f-cash-inv').value || '',
       cash_financing: document.getElementById('f-cash-fin').value || '',
@@ -2115,6 +3276,8 @@ window.submitReport = async function() {
       portal_firm_id: currentUser.id,
       portal_client_name: clientName,
       portal_report_id: null,
+      ip_address: _trialIp || '',
+      categorised_items: categorisedItems || [],
     };
 
     fetch(MAKE_WEBHOOK_URL, {
@@ -2123,10 +3286,18 @@ window.submitReport = async function() {
       body: JSON.stringify(payload),
     }).catch(() => {});
 
+    // Record trial fingerprint so this browser/IP can't reuse the trial
+    if (currentFirm?.active === false && _trialFp) {
+      recordTrialFingerprint(_trialFp, _trialIp).catch(() => {});
+    }
+
     setSubmitLoading(false);
     document.getElementById('submit-status').className = 'submit-status success';
     document.getElementById('submit-status').textContent = '✓ Submitted! Track progress below.';
     showToast('Report submitted successfully!', 'success');
+    document.getElementById('confirm-title').textContent = `Report submitted for ${clientName}`;
+    document.getElementById('confirm-meta').innerHTML =
+      `Estimated delivery: <strong>10–15 minutes</strong><br>We'll email <strong>${escHtml(currentUser.email||'you')}</strong> when it's ready.`;
     startCountdown(15);
 
     setTimeout(() => {
@@ -2144,6 +3315,9 @@ window.submitReport = async function() {
       document.getElementById('submit-btn').disabled = false;
       document.getElementById('submit-text').style.opacity = 1;
       document.getElementById('submit-spinner').style.display = 'none';
+      document.getElementById('csv-review-panel').classList.remove('show');
+      document.getElementById('form-submit-row').style.display = '';
+      _categorisedItems = [];
     }, 3000);
 
   } catch (err) {
@@ -2169,6 +3343,59 @@ window.readFile = function(file) {
   });
 };
 
+// ── BRANDING PREVIEW ─────────────────────────────────────────────────────
+window.showBrandingPreview = function() {
+  const modal = document.getElementById('bp-modal');
+  const body  = document.getElementById('bp-preview-body');
+  if (!modal || !body) return;
+
+  const firmName   = document.getElementById('s-firm-name')?.value || currentFirm?.firm_name || 'Your Firm';
+  const tagline    = document.getElementById('s-tagline')?.value   || currentFirm?.tagline   || '';
+  const logoUrl    = document.getElementById('s-logo')?.value      || currentFirm?.logo_url  || '';
+  const primary    = document.getElementById('s-primary')?.value   || currentFirm?.primary_colour || '#0F1F3D';
+  const accent     = document.getElementById('s-accent')?.value    || currentFirm?.accent_colour  || '#0E8A7A';
+  const initials   = (firmName[0] || 'F').toUpperCase();
+
+  const logoHtml = logoUrl
+    ? `<img src="${escHtml(logoUrl)}" onerror="this.parentElement.innerHTML='<span class=bp-mock-logo-init>${escHtml(initials)}</span>'">`
+    : `<span class="bp-mock-logo-init">${escHtml(initials)}</span>`;
+
+  body.innerHTML = `
+    <div class="bp-mock-header" style="background:${escHtml(primary)}">
+      <div class="bp-mock-logo-wrap">${logoHtml}</div>
+      <div>
+        <div class="bp-mock-firm-name">${escHtml(firmName)}</div>
+        ${tagline ? `<div class="bp-mock-tagline">${escHtml(tagline)}</div>` : ''}
+      </div>
+    </div>
+    <div class="bp-mock-accent" style="background:${escHtml(accent)}"></div>
+    <div class="bp-mock-body">
+      <div class="bp-mock-block">
+        <div class="bp-mock-block-label">Total Revenue</div>
+        <div class="bp-mock-block-val" style="color:${escHtml(accent)}">£248,500</div>
+      </div>
+      <div class="bp-mock-block">
+        <div class="bp-mock-block-label">Gross Profit</div>
+        <div class="bp-mock-block-val" style="color:${escHtml(accent)}">£96,200</div>
+      </div>
+      <div class="bp-mock-block">
+        <div class="bp-mock-block-label">Net Profit</div>
+        <div class="bp-mock-block-val" style="color:${escHtml(accent)}">£52,100</div>
+      </div>
+      <div class="bp-mock-block">
+        <div class="bp-mock-block-label">Profit Margin</div>
+        <div class="bp-mock-block-val" style="color:${escHtml(accent)}">21.0%</div>
+      </div>
+    </div>
+    <p class="bp-note">This is a preview of how your firm branding will appear on the report cover and KPI pages. Save your settings to apply changes.</p>
+  `;
+  modal.classList.remove('hidden');
+};
+
+window.closeBrandingPreview = function() {
+  document.getElementById('bp-modal')?.classList.add('hidden');
+};
+
 // ── SETTINGS ─────────────────────────────────────────────────────────────
 window.toggleDarkMode = function(on) {
   document.documentElement.classList.toggle('dark', on);
@@ -2187,9 +3414,13 @@ window.populateSettings = function() {
   document.getElementById('s-accent').value     = currentFirm.accent_colour || '';
   document.getElementById('s-disclaimer').value = currentFirm.disclaimer || '';
   document.getElementById('s-email').value      = currentUser.email || '';
-  document.getElementById('s-plan').value =
+  const planLabel =
     currentFirm.plan === 'white_label'     ? 'White Label — £499/mo' :
-    currentFirm.plan === 'white_label_pro' ? 'White Label Pro — £799/mo' : 'Standard — £299/mo';
+    currentFirm.plan === 'white_label_pro' ? 'White Label Pro — £799/mo' :
+    currentFirm.active === false           ? 'Free Trial' : 'Standard — £299/mo';
+  document.getElementById('s-plan').value = planLabel;
+  const subLabel = document.getElementById('sub-plan-label');
+  if (subLabel) subLabel.textContent = planLabel;
   if (currentFirm.primary_colour) {
     document.getElementById('swatch-primary').style.background = currentFirm.primary_colour;
     const pp = document.getElementById('s-primary-picker');
@@ -2201,6 +3432,9 @@ window.populateSettings = function() {
     if (ap && /^#[0-9A-Fa-f]{6}$/.test(currentFirm.accent_colour)) ap.value = currentFirm.accent_colour;
   }
   if (currentFirm.logo_url) previewLogo();
+  const dnEl = document.getElementById('s-default-notes');
+  if (dnEl) dnEl.value = currentFirm.default_notes || '';
+  renderBillingCard();
   updateProfileCompleteness();
 };
 
@@ -2213,6 +3447,7 @@ window.saveSettings = async function() {
     primary_colour: document.getElementById('s-primary').value.trim(),
     accent_colour:  document.getElementById('s-accent').value.trim(),
     disclaimer:     document.getElementById('s-disclaimer').value.trim(),
+    default_notes:  document.getElementById('s-default-notes')?.value.trim() || '',
   };
   const { error } = await sb.from('firms').update(updates).eq('id', currentUser.id);
   if (error) { showToast('Failed to save settings.', 'error'); return; }
@@ -2221,6 +3456,178 @@ window.saveSettings = async function() {
   document.getElementById('sidebar-avatar').textContent = (updates.firm_name || 'F')[0].toUpperCase();
   updateProfileCompleteness();
   showToast('Settings saved.', 'success');
+};
+
+window.renderBillingCard = function() {
+  const el = document.getElementById('billing-card-body');
+  if (!el || !currentFirm) return;
+  const plan = currentFirm.plan;
+  const isWL = plan === 'white_label' || plan === 'white_label_pro';
+  const planName = isWL ? (plan === 'white_label_pro' ? 'White Label Pro' : 'White Label') : 'Standard';
+  el.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;color:var(--gray)">Current plan: <strong style="color:var(--text)">${planName}</strong></div>
+      <div style="font-size:12.5px;color:var(--gray);margin-top:4px">To change your plan, email <a href="mailto:reports@pagevo.co.uk" style="color:var(--teal)">reports@pagevo.co.uk</a> or upgrade below.</div>
+    </div>
+    <div class="billing-plan-row">
+      <div>
+        <div class="billing-plan-name">Standard</div>
+        <div class="billing-plan-price">&pound;299 / month &middot; Unlimited reports</div>
+      </div>
+      ${!isWL ? '<span class="billing-plan-badge">Current plan</span>' : '<a class="btn-billing-upgrade" href="https://buy.stripe.com/7sY4gr24W8pEgYRdTLes001" target="_blank" rel="noopener">Upgrade &rarr;</a>'}
+    </div>
+    <div class="billing-plan-row">
+      <div>
+        <div class="billing-plan-name">White Label</div>
+        <div class="billing-plan-price">&pound;499 / month &middot; Full branding &amp; analytics</div>
+      </div>
+      ${isWL ? '<span class="billing-plan-badge">Current plan</span>' : '<a class="btn-billing-upgrade" href="https://buy.stripe.com/6oU5kvbFwbBQ9wpbLDes002" target="_blank" rel="noopener">Upgrade &rarr;</a>'}
+    </div>
+  `;
+};
+
+window.regenReport = async function(reportId, clientName) {
+  try {
+    await fetch('https://hook.eu1.make.com/rivovy5izuvr2richq8x4euyew2h8y37', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        firm_id: currentUser.id,
+        report_id: reportId,
+        client_name: clientName,
+        accountant_notes: 'Regenerated report — original data not available, please resubmit CSV for fresh analysis.',
+        regenerated: true,
+      }),
+    });
+  } catch(e) {}
+  showToast('Report resubmitted — you\'ll receive it by email within 15 minutes.', 'success');
+};
+
+window.renderClientsPage = function() {
+  const tbody = document.getElementById('clients-body');
+  if (!tbody) return;
+  if (!allReports.length) {
+    tbody.innerHTML = `<tr><td colspan="5">
+      <div class="empty-state">
+        <h3 class="empty-title">No clients yet</h3>
+        <p class="empty-sub">Generate a report to see your clients listed here.</p>
+        <button class="empty-cta" onclick="showPage('submit')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Generate first report
+        </button>
+      </div>
+    </td></tr>`;
+    return;
+  }
+  const map = {};
+  allReports.forEach(r => {
+    if (!map[r.client_name]) {
+      map[r.client_name] = { count: 0, lastDate: r.created_at, lastPeriod: r.period, lastReport: r };
+    }
+    map[r.client_name].count++;
+    if (new Date(r.created_at) > new Date(map[r.client_name].lastDate)) {
+      map[r.client_name].lastDate = r.created_at;
+      map[r.client_name].lastPeriod = r.period;
+      map[r.client_name].lastReport = r;
+    }
+  });
+  const clients = Object.entries(map).sort((a,b) => new Date(b[1].lastDate) - new Date(a[1].lastDate));
+  tbody.innerHTML = clients.map(([name, info]) => {
+    const delivered = isDelivered(info.lastReport);
+    const badge = delivered
+      ? '<span class="badge badge-green">Delivered</span>'
+      : '<span class="badge badge-amber">Processing</span>';
+    return `<tr style="cursor:pointer" onclick="filterToClient('${escHtml(name)}')">
+      <td style="font-weight:500">${escHtml(name)}</td>
+      <td>${info.count}</td>
+      <td style="color:var(--gray)">${formatDate(info.lastDate)}</td>
+      <td style="color:var(--gray)">${info.lastPeriod || '—'}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+};
+
+window.filterToClient = function(clientName) {
+  showPage('reports');
+  const searchEl = document.getElementById('reports-search');
+  if (searchEl) { searchEl.value = clientName; filterReports(); }
+};
+
+window.updateRecentPills = function() {
+  const wrap = document.getElementById('recent-pills-wrap');
+  const container = document.getElementById('recent-pills');
+  if (!wrap || !container) return;
+  if (!allReports.length) { wrap.style.display = 'none'; return; }
+  const seen = new Set();
+  const recent = [];
+  for (const r of allReports) {
+    if (!seen.has(r.client_name)) { seen.add(r.client_name); recent.push(r.client_name); }
+    if (recent.length >= 5) break;
+  }
+  if (!recent.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  container.innerHTML = recent.map(name =>
+    `<button class="recent-pill" type="button" onclick="selectRecentClient('${escHtml(name)}')">${escHtml(name)}</button>`
+  ).join('');
+};
+
+window.selectRecentClient = function(name) {
+  const el = document.getElementById('f-client-name');
+  if (el) { el.value = name; el.dispatchEvent(new Event('input')); }
+};
+
+window.renderAnalyticsPage = function() {
+  const statsGrid = document.getElementById('analytics-stats-grid');
+  const chartWrap = document.getElementById('analytics-chart-wrap');
+  if (!statsGrid || !chartWrap) return;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonth = allReports.filter(r => new Date(r.created_at) >= monthStart).length;
+  const clientCounts = {};
+  allReports.forEach(r => { clientCounts[r.client_name] = (clientCounts[r.client_name] || 0) + 1; });
+  const topClient = Object.entries(clientCounts).sort((a,b) => b[1]-a[1])[0]?.[0] || '—';
+  const monthlyCounts = {};
+  allReports.forEach(r => {
+    const d = new Date(r.created_at);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    monthlyCounts[key] = (monthlyCounts[key] || 0) + 1;
+  });
+  const busiestEntry = Object.entries(monthlyCounts).sort((a,b) => b[1]-a[1])[0];
+  let busiestMonth = '—';
+  if (busiestEntry) {
+    const [yr, mo] = busiestEntry[0].split('-');
+    busiestMonth = new Date(yr, mo-1).toLocaleString('default', {month:'short', year:'numeric'});
+  }
+  statsGrid.innerHTML = [
+    {label:'Total Reports', value: allReports.length},
+    {label:'This Month', value: thisMonth},
+    {label:'Avg Health Score', value:'N/A'},
+    {label:'Top Client', value: allReports.length ? topClient : '—'},
+    {label:'Busiest Month', value: busiestMonth},
+  ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value sm">${escHtml(String(s.value))}</div></div>`).join('');
+
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    months.push({ label: d.toLocaleString('default',{month:'short'}), count: monthlyCounts[key] || 0 });
+  }
+  const maxCount = Math.max(...months.map(m => m.count), 1);
+  const barW = 52, gap = 16, padL = 8, padB = 32, padT = 24, chartH = 160;
+  const totalW = padL + 6*(barW+gap) - gap;
+  const H = chartH + padB + padT;
+  const bars = months.map((m, i) => {
+    const x = padL + i * (barW + gap);
+    const bh = Math.max((m.count / maxCount) * chartH, m.count > 0 ? 4 : 0);
+    const y = padT + chartH - bh;
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="4" fill="var(--teal)" fill-opacity=".75"/>
+      ${m.count > 0 ? `<text x="${x+barW/2}" y="${y-6}" class="analytics-bar-val">${m.count}</text>` : ''}
+      <text x="${x+barW/2}" y="${H-8}" class="analytics-bar-label">${m.label}</text>`;
+  }).join('');
+  chartWrap.innerHTML = `<svg viewBox="0 0 ${totalW} ${H}" class="analytics-bar-chart" style="width:100%;max-height:220px">
+    <line x1="0" y1="${padT+chartH}" x2="${totalW}" y2="${padT+chartH}" stroke="var(--gray-light)" stroke-width="1.5"/>
+    ${bars}
+  </svg>`;
 };
 
 window.previewColour = function(inputId, swatchId) {
@@ -2241,12 +3648,380 @@ window.previewLogo = function() {
 };
 
 // ── FILE UPLOAD UX ────────────────────────────────────────────────────────
+let _csvValid = {};
+
 window.handleFileSelect = function(input, nameId) {
   if (input.files[0]) {
     const el = document.getElementById(nameId);
     el.textContent = '✓ ' + input.files[0].name;
     el.style.display = 'block';
+    const isFirst = input.id === 'csv-file-1';
+    const slot = isFirst ? 1 : 2;
+    checkCsvSize(input.files[0], isFirst ? 'file-size-warn-1' : 'file-size-warn-2',
+                                  isFirst ? 'file-size-1'    : 'file-size-2');
+    validateCsvFile(input.files[0], slot);
+    updateFormProgress();
   }
+};
+
+window.parseSimpleCsv = function(text) {
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const row = [];
+    let cell = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQ && line[i+1] === '"') { cell += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === ',' && !inQ) { row.push(cell.trim()); cell = ''; }
+      else cell += c;
+    }
+    row.push(cell.trim());
+    if (row.some(c => c !== '')) rows.push(row);
+  }
+  return rows;
+};
+
+window.validateCsvFile = async function(file, slot) {
+  const valEl = document.getElementById('csv-validation-' + slot);
+  const previewEl = document.getElementById('csv-preview-wrap-' + slot);
+  if (!valEl) return;
+
+  // Reset preview
+  if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.remove('show'); }
+
+  // Excel files — skip content parse, accept on size only
+  if (/\.xlsx?$/i.test(file.name)) {
+    if (file.size > 5 * 1024 * 1024) {
+      _showCsvVal(valEl, 'error', '✗ File too large — maximum 5MB');
+      _csvValid[slot] = false;
+    } else {
+      _showCsvVal(valEl, 'good', `✓ Excel file accepted — ${Math.round(file.size/1024)} KB`);
+      _csvValid[slot] = true;
+    }
+    updateSubmitBlocked();
+    return;
+  }
+
+  // Size check
+  if (file.size > 5 * 1024 * 1024) {
+    _showCsvVal(valEl, 'error', '✗ File too large — maximum 5MB');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  let text;
+  try { text = await readFile(file); } catch(e) {
+    _showCsvVal(valEl, 'error', '✗ Could not read file');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  if (!text || !text.trim()) {
+    _showCsvVal(valEl, 'error', '✗ File appears empty');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  const rows = parseSimpleCsv(text);
+
+  if (rows.length < 3) {
+    _showCsvVal(valEl, 'warn', '⚠ File seems too small — make sure you\'re uploading the full P&L');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  const hasMultiCol = rows.some(r => r.length >= 2);
+  if (!hasMultiCol) {
+    _showCsvVal(valEl, 'warn', '⚠ File seems too small — make sure you\'re uploading the full P&L');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  const hasNumbers = rows.some(r => r.some(cell => {
+    const n = parseFloat(cell.replace(/[,£$€%\s]/g, ''));
+    return !isNaN(n) && n > 0;
+  }));
+  if (!hasNumbers) {
+    _showCsvVal(valEl, 'warn', '⚠ No numeric data detected — check this is a P&L export');
+    _csvValid[slot] = false;
+    updateSubmitBlocked();
+    return;
+  }
+
+  // Valid — detect software
+  const maxCols = Math.max(...rows.map(r => r.length));
+  const tl = text.toLowerCase();
+  let badge = '';
+  if (tl.includes('xero')) badge = 'Xero';
+  else if (tl.includes('quickbooks')) badge = 'QuickBooks';
+  else if (tl.includes('sage')) badge = 'Sage';
+  const badgeHtml = badge
+    ? ` <span class="csv-sw-badge">ℹ ${badge} export detected</span>`
+    : '';
+  _showCsvVal(valEl, 'good', `✓ File looks good — ${rows.length} rows, ${maxCols} columns detected${badgeHtml}`);
+  _csvValid[slot] = true;
+  if (slot === 1) {
+    showCsvReview(rows);
+  } else {
+    updateSubmitBlocked();
+  }
+
+  // Preview
+  if (previewEl) {
+    const preview = rows.slice(0, 5);
+    const hdrs = preview[0];
+    const bodyRows = preview.slice(1);
+    const thHtml = hdrs.map(h => `<th>${escHtml(h)}</th>`).join('');
+    const trHtml = bodyRows.map(r =>
+      `<tr>${hdrs.map((_,i) => `<td>${escHtml(r[i]||'')}</td>`).join('')}</tr>`
+    ).join('');
+    previewEl.innerHTML = `
+      <button class="csv-preview-toggle" onclick="toggleCsvPreview(${slot},this)">
+        <svg class="csv-preview-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        Preview data
+      </button>
+      <div class="csv-preview-body" id="csv-preview-body-${slot}">
+        <table class="csv-preview-table">
+          <thead><tr>${thHtml}</tr></thead>
+          <tbody>${trHtml}</tbody>
+        </table>
+      </div>`;
+    previewEl.classList.add('show');
+  }
+};
+
+window._showCsvVal = function(el, type, html) {
+  el.className = 'csv-validation show csv-val-' + type;
+  el.innerHTML = `<div class="csv-val-inner">${html}</div>`;
+};
+
+window.toggleCsvPreview = function(slot, btn) {
+  const body = document.getElementById('csv-preview-body-' + slot);
+  if (!body) return;
+  const open = body.classList.toggle('show');
+  btn.classList.toggle('open', open);
+};
+
+window.updateSubmitBlocked = function() {
+  const isComparison = document.getElementById('f-report-type')?.value === 'comparison';
+  const blocked = _csvValid[1] === false || (isComparison && _csvValid[2] === false);
+  const btn = document.getElementById('submit-btn');
+  const msg = document.getElementById('csv-submit-block');
+  if (btn) btn.disabled = blocked;
+  if (msg) msg.classList.toggle('show', blocked);
+};
+
+// ── CSV CATEGORY REVIEW ───────────────────────────────────────────────────
+let _categorisedItems = [];
+
+const _CAT_KEYWORDS = {
+  revenue: ['revenue','sales','income','turnover','fees','receipts','grants','commission','interest received','other income','net revenue','gross revenue','service revenue','product revenue'],
+  cogs:    ['cost of sales','cost of goods','cogs','materials','direct cost','purchases','labour cost','subcontractor','freight','production cost','cost of revenue','direct labour','raw material'],
+  opex:    ['salary','salaries','wages','payroll','rent','rates','utilities','electricity','water','gas','admin','marketing','advertising','professional fees','legal','accountan','depreciation','amortisation','insurance','travel','subscriptions','software','telephone','phone','interest paid','bank charges','bad debt','research','training','office','cleaning','printing'],
+};
+
+function _categKeyword(label) {
+  const l = label.toLowerCase();
+  for (const [cat, kws] of Object.entries(_CAT_KEYWORDS)) {
+    if (kws.some(k => l.includes(k))) return cat;
+  }
+  return 'other';
+}
+
+const _CAT_CYCLE = ['revenue','cogs','opex','other'];
+const _CAT_LABEL = {revenue:'Revenue', cogs:'COGS', opex:'OpEx', other:'Other'};
+
+window.showCsvReview = async function(rows) {
+  const dataRows = rows.filter((r, i) => {
+    if (i === 0) return false;
+    const label = (r[0] || '').trim();
+    if (!label) return false;
+    return r.slice(1).some(cell => {
+      const n = parseFloat(cell.replace(/[,£$€%\s]/g,''));
+      return !isNaN(n);
+    });
+  });
+
+  if (dataRows.length === 0) { updateSubmitBlocked(); return; }
+
+  const labelNorms = [...new Set(dataRows.map(r => r[0].trim().toLowerCase()))];
+  let priorMap = {};
+  try {
+    const { data } = await sb.from('category_mappings')
+      .select('label_normalised,category')
+      .eq('firm_id', currentUser.id)
+      .in('label_normalised', labelNorms);
+    if (data) data.forEach(row => { priorMap[row.label_normalised] = row.category; });
+  } catch(e) {}
+
+  const headers = rows[0] || [];
+  const periodHeaders = headers.slice(1).filter(h => h !== '');
+
+  _categorisedItems = dataRows.map(r => {
+    const label = r[0].trim();
+    const norm = label.toLowerCase();
+    const values = r.slice(1);
+    const cat = priorMap[norm] || _categKeyword(label);
+    return { label, label_normalised: norm, values, category: cat };
+  });
+
+  _renderReviewTable(periodHeaders);
+
+  const countEl = document.getElementById('csv-review-count');
+  if (countEl) countEl.textContent = _categorisedItems.length + ' line items';
+
+  document.getElementById('csv-review-panel').classList.add('show');
+  document.getElementById('form-submit-row').style.display = 'none';
+  document.getElementById('csv-submit-block').style.display = 'none';
+};
+
+function _renderReviewTable(periodHeaders) {
+  const wrap = document.getElementById('csv-review-table-wrap');
+  const maxPeriods = Math.min(periodHeaders.length || 1, 3);
+  const periodThs = periodHeaders.length > 0
+    ? periodHeaders.slice(0, maxPeriods).map(h => `<th class="csv-review-row-val">${escHtml(h)}</th>`).join('')
+    : '<th>Value</th>';
+
+  const bodyRows = _categorisedItems.map((item, idx) => {
+    const valTds = periodHeaders.length > 0
+      ? periodHeaders.slice(0, maxPeriods).map((_, pi) =>
+          `<td class="csv-review-row-val">${escHtml(item.values[pi] || '')}</td>`
+        ).join('')
+      : `<td class="csv-review-row-val">${escHtml((item.values[0] || ''))}</td>`;
+    return `<tr>
+      <td><div class="csv-review-row-label" title="${escHtml(item.label)}">${escHtml(item.label)}</div></td>
+      ${valTds}
+      <td><span class="cat-badge ${item.category}" onclick="cycleCatBadge(${idx},this)">${_CAT_LABEL[item.category] || item.category}</span></td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table class="csv-review-table">
+    <thead><tr><th>Line Item</th>${periodThs}<th>Category</th></tr></thead>
+    <tbody>${bodyRows}</tbody>
+  </table>`;
+}
+
+window.cycleCatBadge = function(idx, el) {
+  const cur = _categorisedItems[idx].category;
+  const next = _CAT_CYCLE[(_CAT_CYCLE.indexOf(cur) + 1) % _CAT_CYCLE.length];
+  _categorisedItems[idx].category = next;
+  el.className = 'cat-badge ' + next;
+  el.textContent = _CAT_LABEL[next] || next;
+};
+
+window.hideCsvReview = function() {
+  document.getElementById('csv-review-panel').classList.remove('show');
+  document.getElementById('form-submit-row').style.display = '';
+  const f1 = document.getElementById('csv-file-1');
+  f1.value = ''; if (f1.value) { f1.type = 'text'; f1.type = 'file'; }
+  document.getElementById('upload-name-1').style.display = 'none';
+  const valEl = document.getElementById('csv-validation-1');
+  if (valEl) { valEl.className = 'csv-validation'; valEl.innerHTML = ''; }
+  const prevEl = document.getElementById('csv-preview-wrap-1');
+  if (prevEl) { prevEl.innerHTML = ''; prevEl.classList.remove('show'); }
+  _csvValid[1] = false;
+  _categorisedItems = [];
+  updateSubmitBlocked();
+};
+
+window.confirmCsvReview = async function() {
+  const btn = document.getElementById('csv-review-submit-btn');
+  const txt = document.getElementById('csv-review-submit-text');
+  const spin = document.getElementById('csv-review-submit-spinner');
+  if (btn) btn.disabled = true;
+  if (txt) txt.style.opacity = 0;
+  if (spin) spin.style.display = 'inline-block';
+
+  const upserts = _categorisedItems.map(item => ({
+    firm_id: currentUser.id,
+    label_normalised: item.label_normalised,
+    category: item.category,
+    confirmed_count: 1,
+    last_confirmed_at: new Date().toISOString(),
+  }));
+  try {
+    await sb.from('category_mappings').upsert(upserts, { onConflict: 'firm_id,label_normalised' });
+  } catch(e) {
+    console.warn('category_mappings upsert failed', e);
+  }
+
+  if (btn) btn.disabled = false;
+  if (txt) txt.style.opacity = 1;
+  if (spin) spin.style.display = 'none';
+
+  submitReport([..._categorisedItems]);
+};
+
+window.checkCsvSize = function(file, warnId, sizeId) {
+  const warn = document.getElementById(warnId);
+  if (!warn) return;
+  if (file.size > 5 * 1024 * 1024) {
+    const mb = (file.size / (1024 * 1024)).toFixed(1);
+    const sizeEl = document.getElementById(sizeId);
+    if (sizeEl) sizeEl.textContent = mb + ' MB';
+    warn.classList.add('show');
+  } else {
+    warn.classList.remove('show');
+  }
+};
+
+window.toggleCsvHint = function() {
+  const body = document.getElementById('csv-hint-body');
+  const btn  = document.getElementById('csv-hint-btn');
+  if (!body) return;
+  const open = body.classList.toggle('show');
+  btn?.classList.toggle('open', open);
+};
+
+window.updateContextCounter = function() {
+  const ta = document.getElementById('f-context');
+  const counter = document.getElementById('f-context-counter');
+  if (!ta || !counter) return;
+  const len = ta.value.length;
+  const max = 500;
+  counter.textContent = len + ' / ' + max;
+  counter.className = 'char-counter' + (len > max ? ' over' : len > max * 0.9 ? ' warn' : '');
+};
+
+window.updateFormProgress = function() {
+  const name = (document.getElementById('f-client-name')?.value || '').trim();
+  const csv  = document.getElementById('csv-file-1')?.files[0];
+  const step1Done = name.length >= 2;
+  const step2Done = !!csv;
+
+  const TICK_SVG = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  const setStep = (num, state) => {
+    const el = document.getElementById('fstep-' + num);
+    if (!el) return;
+    el.className = 'form-step' + (state ? ' ' + state : '');
+    const circle = document.getElementById('fstep-circle-' + num);
+    if (!circle) return;
+    circle.innerHTML = state === 'done' ? TICK_SVG : String(num);
+  };
+  const setConn = (num, done) => {
+    document.getElementById('fconn-' + num)?.classList.toggle('done', done);
+  };
+
+  setStep(1, step1Done ? 'done' : 'active');
+  setStep(2, step2Done ? 'done' : (step1Done ? 'active' : ''));
+  setStep(3, (step1Done && step2Done) ? 'active' : '');
+  setConn(1, step1Done);
+  setConn(2, step2Done);
+
+  // Tick + border on client name field
+  const tick  = document.getElementById('tick-client-name');
+  const input = document.getElementById('f-client-name');
+  tick?.classList.toggle('show', step1Done);
+  input?.classList.toggle('input-valid', step1Done);
 };
 window.handleDrag = function(e, areaId) {
   e.preventDefault();
@@ -2270,7 +4045,7 @@ window.showPage = function(name) {
   document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name)?.classList.add('active');
 
-  const titles = { dashboard:'Dashboard', reports:'All Reports', submit:'New Report', settings:'Settings' };
+  const titles = { dashboard:'Dashboard', reports:'All Reports', clients:'Clients', analytics:'Analytics', submit:'New Report', settings:'Settings' };
   document.getElementById('page-title').textContent = titles[name] || '';
 
   document.querySelectorAll('.nav-item').forEach(n => {
@@ -2281,17 +4056,29 @@ window.showPage = function(name) {
   });
 
   if (name === 'reports') { renderReports(); requestAnimationFrame(setupAllSwipe); }
+  if (name === 'clients') renderClientsPage();
+  if (name === 'analytics') renderAnalyticsPage();
   if (name !== 'submit') clearCountdown();
+  if (name === 'submit') {
+    requestAnimationFrame(updateFormProgress);
+    const notesEl = document.getElementById('f-context');
+    if (notesEl && !notesEl.value && currentFirm?.default_notes) {
+      notesEl.value = currentFirm.default_notes;
+      updateContextCounter();
+    }
+  }
 };
 
 window.showApp = function() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  document.getElementById('chat-trigger').style.display = '';
 };
 
 window.showAuth = function() {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+  document.getElementById('chat-trigger').style.display = 'none';
   document.getElementById('pending-screen').classList.remove('show');
   currentUser = null; currentFirm = null; allReports = []; notifications = [];
   clearTimeout(_idleWarnT); clearTimeout(_idleOutT); clearInterval(_warnCdI);
@@ -2643,7 +4430,7 @@ window.setupPullToRefresh = function() {
 // ── AI CHAT WIDGET ─────────────────────────────────────────────────────────
 let _chatHistory = [], _chatOpen = false, _chatCount = 0;
 const CHAT_MAX = 20;
-const CHAT_WELCOME = "Hi! I'm the FinReportAI Assistant (Beta). I can help you navigate the portal, understand your reports, or answer any questions about your finances. What would you like to know?";
+const CHAT_WELCOME = "Hi! I'm the Pagevo Assistant (Beta). I can help you navigate the portal, understand your reports, or answer any questions about your finances. What would you like to know?";
 
 window.toggleChat = function() {
   _chatOpen = !_chatOpen;
@@ -2651,6 +4438,7 @@ window.toggleChat = function() {
   document.getElementById('chat-dot')?.classList.remove('active');
   if (_chatOpen && _chatHistory.length === 0) {
     _chatAddMsg('assistant', CHAT_WELCOME);
+    showChatSuggestions();
   }
   if (_chatOpen) {
     scrollChatBottom();
@@ -2658,8 +4446,96 @@ window.toggleChat = function() {
   }
 };
 
+window.showChatSuggestions = function() {
+  const box = document.getElementById('chat-messages');
+  if (!box) return;
+  const div = document.createElement('div');
+  div.className = 'chat-suggestions';
+  div.id = 'chat-suggestions';
+  ['How do I upload a CSV?', "What's included in the report?", 'How does white label work?'].forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'chat-sugg-btn';
+    btn.textContent = q;
+    btn.onclick = () => {
+      document.getElementById('chat-suggestions')?.remove();
+      document.getElementById('chat-input').value = q;
+      sendChatMessage();
+    };
+    div.appendChild(btn);
+  });
+  box.appendChild(div);
+  scrollChatBottom();
+};
+
 window.chatKeydown = function(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+};
+
+window._parseChatMarkdown = function(text) {
+  const lines = text.split('\n');
+  let html = '';
+  let inUl = false, inOl = false, paraLines = [];
+
+  function flushPara() {
+    if (!paraLines.length) return;
+    const content = paraLines.join(' ').trim();
+    if (content) html += '<p>' + content + '</p>';
+    paraLines = [];
+  }
+  function closeList() {
+    if (inUl) { html += '</ul>'; inUl = false; }
+    if (inOl) { html += '</ol>'; inOl = false; }
+  }
+  function inlineFormat(s) {
+    // bold: **text**
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    return s;
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const line = raw.trimEnd();
+
+    // heading: # text
+    if (/^#{1,3}\s/.test(line)) {
+      flushPara(); closeList();
+      html += '<span class="chat-heading">' + inlineFormat(line.replace(/^#{1,3}\s+/, '')) + '</span>';
+      continue;
+    }
+
+    // unordered list: - or •
+    const ulMatch = line.match(/^[\-•]\s+(.*)/);
+    if (ulMatch) {
+      flushPara();
+      if (inOl) { html += '</ol>'; inOl = false; }
+      if (!inUl) { html += '<ul>'; inUl = true; }
+      html += '<li>' + inlineFormat(ulMatch[1]) + '</li>';
+      continue;
+    }
+
+    // ordered list: 1. text
+    const olMatch = line.match(/^\d+\.\s+(.*)/);
+    if (olMatch) {
+      flushPara();
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (!inOl) { html += '<ol>'; inOl = true; }
+      html += '<li>' + inlineFormat(olMatch[1]) + '</li>';
+      continue;
+    }
+
+    // blank line → paragraph break
+    if (line.trim() === '') {
+      flushPara(); closeList();
+      continue;
+    }
+
+    // regular text — collect into paragraph
+    closeList();
+    paraLines.push(inlineFormat(line));
+  }
+
+  flushPara(); closeList();
+  return html;
 };
 
 window._chatAddMsg = function(role, text) {
@@ -2667,7 +4543,11 @@ window._chatAddMsg = function(role, text) {
   if (!box) return;
   const d = document.createElement('div');
   d.className = 'chat-msg ' + role;
-  d.textContent = text;
+  if (role === 'assistant') {
+    d.innerHTML = _parseChatMarkdown(text);
+  } else {
+    d.textContent = text;
+  }
   box.appendChild(d);
   scrollChatBottom();
 };
@@ -2713,9 +4593,9 @@ window.sendChatMessage = async function() {
   const firmName = currentFirm?.firm_name || 'Unknown Firm';
   const firmPlan = currentFirm?.plan === 'white_label' ? 'White Label' :
                    currentFirm?.plan === 'white_label_pro' ? 'White Label Pro' : 'Standard';
-  const systemPrompt = `You are the FinReportAI assistant, built into the client portal for UK accountancy firms. You help users navigate the portal, understand their financial reports, and get the most out of FinReportAI.
+  const systemPrompt = `You are the Pagevo assistant, built into the client portal for UK accountancy firms. You help users navigate the portal, understand their financial reports, and get the most out of Pagevo.
 
-You know the following about FinReportAI:
+You know the following about Pagevo:
 - It generates branded PDF financial reports from client P&L CSV data
 - Reports include: executive summary, KPI cards, revenue charts, margin analysis, expense breakdown, P&L statement, waterfall chart, corporation tax estimate, cash flow, balance sheet, recommendations, forecast, flags, glossary
 - Standard plan: £299/mo, unlimited reports, PDF delivered by email
@@ -2728,7 +4608,7 @@ Current firm context:
 - Firm name: ${firmName}
 - Plan: ${firmPlan}
 
-Keep answers concise, helpful, and professional. If asked about specific report data you don't have access to, tell the user to check the report PDF or submit a new report. Never mention AI, Claude, or Anthropic. Refer to yourself as the FinReportAI Assistant.`;
+Keep answers concise, helpful, and professional. If asked about specific report data you don't have access to, tell the user to check the report PDF or submit a new report. Never mention AI, Claude, or Anthropic. Refer to yourself as the Pagevo Assistant.`;
 
   try {
     const res = await fetch('https://finreportai.onrender.com/ai-chat', {
@@ -2759,6 +4639,135 @@ Keep answers concise, helpful, and professional. If asked about specific report 
   if (sendBtn) sendBtn.disabled = false;
   scrollChatBottom();
 };
+
+// ── TRIAL / FRAUD PREVENTION ─────────────────────────────────────────────
+
+window.generateBrowserFingerprint = async function() {
+  const parts = [
+    navigator.userAgent,
+    screen.width + 'x' + screen.height,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    navigator.language,
+  ];
+  try {
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#0F1F3D';
+    ctx.fillText('Pagevo🔐', 2, 2);
+    parts.push(c.toDataURL());
+  } catch(e) {}
+  try {
+    const gl = document.createElement('canvas').getContext('webgl');
+    if (gl) {
+      const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      if (dbg) parts.push(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
+    }
+  } catch(e) {}
+  const str = parts.join('|');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+};
+
+window.getClientIP = async function() {
+  try {
+    const r = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(4000) });
+    const d = await r.json();
+    return d.ip || '';
+  } catch { return ''; }
+};
+
+window.checkTrialFraud = async function(fingerprint, ip) {
+  const conditions = [];
+  if (fingerprint) conditions.push(`fingerprint.eq.${fingerprint}`);
+  if (ip) conditions.push(`ip_address.eq.${ip}`);
+  if (!conditions.length) return false;
+  const { data } = await sb.from('trial_fingerprints')
+    .select('firm_id')
+    .or(conditions.join(','))
+    .neq('firm_id', currentUser.id)
+    .limit(1);
+  return !!(data && data.length > 0);
+};
+
+window.recordTrialFingerprint = async function(fingerprint, ip) {
+  await sb.from('trial_fingerprints').insert({
+    fingerprint, ip_address: ip || null, firm_id: currentUser.id
+  });
+};
+
+window.showPaywall = function(reason) {
+  const card = document.getElementById('paywall-card');
+  const formCard = document.getElementById('submit-form-card');
+  const heading = document.getElementById('paywall-heading');
+  const sub = document.getElementById('paywall-sub');
+  if (!card) return;
+  if (reason === 'fraud') {
+    heading.textContent = 'This free trial has already been used';
+    sub.textContent = 'Please upgrade to continue generating reports.';
+  } else {
+    heading.textContent = 'Your free report has been used';
+    sub.textContent = 'Upgrade to unlock unlimited reports, professional PDF output, and more. No setup fee.';
+  }
+  card.style.display = 'block';
+  if (formCard) formCard.style.display = 'none';
+};
+
+window.checkTrialPaywall = async function() {
+  if (currentFirm?.active !== false) return;
+  if (allReports.length >= 1) { showPaywall('used'); return; }
+  // Proactively check for fraud on page load
+  const fp = await generateBrowserFingerprint();
+  const ip = await getClientIP();
+  const isFraud = await checkTrialFraud(fp, ip);
+  if (isFraud) showPaywall('fraud');
+};
+
+// ── Keyboard shortcuts ──────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  // Don't fire when focus is inside a text field
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable) return;
+  // Don't fire during modifier combos (Ctrl/Meta/Alt shortcuts belong to the OS/browser)
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+  const k = e.key;
+
+  if (k === 'Escape') {
+    // Close in priority: session modal → report panel → branding preview → bell → chat
+    if (document.getElementById('session-modal-overlay')?.classList.contains('open')) {
+      document.getElementById('session-modal-overlay').classList.remove('open'); return;
+    }
+    if (document.getElementById('report-panel')?.classList.contains('open')) {
+      closeReportPanel(); return;
+    }
+    if (!document.getElementById('bp-modal')?.classList.contains('hidden')) {
+      closeBrandingPreview(); return;
+    }
+    if (document.getElementById('bell-dropdown')?.classList.contains('open')) {
+      document.getElementById('bell-dropdown').classList.remove('open'); return;
+    }
+    if (_chatOpen) { toggleChat(); return; }
+    return;
+  }
+
+  if (k === 'd' || k === 'D') { e.preventDefault(); showPage('dashboard'); return; }
+  if (k === 'r' || k === 'R') { e.preventDefault(); showPage('reports'); return; }
+  if (k === 'n' || k === 'N') { e.preventDefault(); showPage('submit'); return; }
+
+  if (k === 'Enter') {
+    if (document.getElementById('page-submit')?.classList.contains('active')) {
+      const clientName = document.getElementById('f-client-name').value.trim();
+      const csvFile = document.getElementById('csv-file-1').files[0];
+      if (clientName && csvFile) { e.preventDefault(); submitReport(); }
+    }
+  }
+});
 </script>
 </body>
 </html>
