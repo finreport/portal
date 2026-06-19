@@ -3839,15 +3839,42 @@ function _categKeyword(label) {
 const _CAT_CYCLE = ['revenue','cogs','opex','other'];
 const _CAT_LABEL = {revenue:'Revenue', cogs:'COGS', opex:'OpEx', other:'Other'};
 
+const _SECTION_HEADERS = [
+  'revenue','cost of goods sold','gross profit','operating expenses',
+  'net profit','cash flow','balance sheet','business information','additional context',
+];
+
+function _isNumericCell(cell) {
+  const n = parseFloat(cell.replace(/[,£$€%\s]/g,''));
+  return !isNaN(n);
+}
+
 window.showCsvReview = async function(rows) {
   const dataRows = rows.filter((r, i) => {
     if (i === 0) return false;
+
+    // Skip blank rows
+    if (r.every(c => !c.trim())) return false;
+
     const label = (r[0] || '').trim();
     if (!label) return false;
-    return r.slice(1).some(cell => {
-      const n = parseFloat(cell.replace(/[,£$€%\s]/g,''));
-      return !isNaN(n);
-    });
+
+    // Skip section header rows
+    const labelLow = label.toLowerCase();
+    if (_SECTION_HEADERS.some(h => labelLow === h || labelLow.startsWith(h + ' ') || labelLow.endsWith(' ' + h))) return false;
+
+    // Skip narrative / paragraph rows: label has > 15 words
+    if (label.split(/\s+/).length > 15) return false;
+
+    // Skip rows with only 1 column and no comma-separated values
+    if (r.length === 1 && !label.includes(',')) return false;
+
+    // Skip rows where every value cell is non-numeric (metadata rows)
+    const valueCells = r.slice(1).filter(c => c.trim() !== '');
+    if (valueCells.length === 0) return false;
+    if (!valueCells.some(c => _isNumericCell(c))) return false;
+
+    return true;
   });
 
   if (dataRows.length === 0) { updateSubmitBlocked(); return; }
