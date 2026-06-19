@@ -3845,16 +3845,32 @@ function _categKeyword(label) {
   for (const [cat, kws] of Object.entries(_CAT_KEYWORDS)) {
     if (kws.some(k => l.includes(k))) return cat;
   }
-  return 'other';
+  return 'revenue';
 }
 
-const _CAT_CYCLE = ['revenue','cogs','opex','other'];
-const _CAT_LABEL = {revenue:'Revenue', cogs:'COGS', opex:'OpEx', other:'Other'};
+const _CAT_CYCLE = ['revenue','cogs','opex'];
+const _CAT_LABEL = {revenue:'Revenue', cogs:'COGS', opex:'OpEx'};
 
 const _SECTION_HEADERS = [
   'revenue','cost of goods sold','gross profit','operating expenses',
   'net profit','cash flow','balance sheet','business information','additional context',
 ];
+
+// Named summary/total rows that must never appear in the review table
+const _SUMMARY_ROW_EXACT = new Set([
+  'total revenue','total cogs','total cost of goods sold','total operating expenses',
+  'total opex','gross profit','gross margin','net profit','net loss','net margin',
+  'total assets','total liabilities','total equity','total expenses','total costs',
+  'net cash movement','net cash flow','net change in cash',
+]);
+
+function _isSummaryRow(label) {
+  const l = label.toLowerCase().trim();
+  if (_SUMMARY_ROW_EXACT.has(l)) return true;
+  if (l.startsWith('total ')) return true;
+  if (l.endsWith(' %') || l.includes('margin %') || l.endsWith('%') && l.includes('margin')) return true;
+  return false;
+}
 
 function _isNumericCell(cell) {
   const n = parseFloat(cell.replace(/[,£$€%\s]/g,''));
@@ -3874,6 +3890,9 @@ window.showCsvReview = async function(rows) {
     // Skip section header rows
     const labelLow = label.toLowerCase();
     if (_SECTION_HEADERS.some(h => labelLow === h || labelLow.startsWith(h + ' ') || labelLow.endsWith(' ' + h))) return false;
+
+    // Skip summary / calculated total rows
+    if (_isSummaryRow(label)) return false;
 
     // Skip narrative / paragraph rows: label has > 15 words
     if (label.split(/\s+/).length > 15) return false;
@@ -3898,7 +3917,9 @@ window.showCsvReview = async function(rows) {
       .select('label_normalised,category')
       .eq('firm_id', currentUser.id)
       .in('label_normalised', labelNorms);
-    if (data) data.forEach(row => { priorMap[row.label_normalised] = row.category; });
+    if (data) data.forEach(row => {
+      priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
+    });
   } catch(e) {}
 
   const headers = rows[0] || [];
