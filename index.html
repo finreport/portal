@@ -3835,16 +3835,33 @@ window.updateSubmitBlocked = function() {
 let _categorisedItems = [];
 
 const _CAT_KEYWORDS = {
-  revenue: ['revenue','sales','income','turnover','fees','receipts','grants','commission','interest received','other income','net revenue','gross revenue','service revenue','product revenue'],
-  cogs:    ['cost of sales','cost of goods','cogs','materials','direct cost','purchases','labour cost','subcontractor','freight','production cost','cost of revenue','direct labour','raw material'],
-  opex:    ['salary','salaries','wages','payroll','rent','rates','utilities','electricity','water','gas','admin','marketing','advertising','professional fees','legal','accountan','depreciation','amortisation','insurance','travel','subscriptions','software','telephone','phone','interest paid','bank charges','bad debt','research','training','office','cleaning','printing'],
+  cogs: [
+    'cost of sale','cost of goods','cogs','inventory','stock','materials','components',
+    'parts','ingredients','packaging','produce','raw material',
+    'direct cost','direct labour','labour cost','subcontractor','freight',
+    'production cost','cost of revenue','purchases','beans','coffee',
+  ],
+  opex: [
+    'salary','salaries','wages','payroll','rent','rates','utilities',
+    'electricity','electric','power','water','gas','admin','marketing',
+    'advertising','ads','professional fees','professional','legal','accountan',
+    'depreciation','amortisation','insurance','travel','subscriptions','software',
+    'telephone','phone','interest paid','bank charges','bad debt','research',
+    'training','office','cleaning','printing','repairs','maintenance','misc',
+  ],
 };
+
+const _CAT_EXPENSE_CATCH = [
+  'expense','expenses','cost','costs','fee paid','fees paid',
+  'contractor','contractors','overhead','overheads',
+  'outgoing','outgoings','payment','payments',
+];
 
 function _categKeyword(label) {
   const l = label.toLowerCase();
-  for (const [cat, kws] of Object.entries(_CAT_KEYWORDS)) {
-    if (kws.some(k => l.includes(k))) return cat;
-  }
+  if (_CAT_KEYWORDS.cogs.some(k => l.includes(k))) return 'cogs';
+  if (_CAT_KEYWORDS.opex.some(k => l.includes(k))) return 'opex';
+  if (_CAT_EXPENSE_CATCH.some(k => l.includes(k))) return 'opex';
   return 'revenue';
 }
 
