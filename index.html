@@ -3679,7 +3679,7 @@ window.validateCsvFile = async function(file, slot) {
     return;
   }
 
-  const hasMultiCol = rows.some(r => r.length > 2);
+  const hasMultiCol = rows.some(r => r.length >= 2);
   if (!hasMultiCol) {
     _showCsvVal(valEl, 'warn', '⚠ File seems too small — make sure you\'re uploading the full P&L');
     _csvValid[slot] = false;
