@@ -1410,6 +1410,46 @@ html.dark .csv-preview-table th{background:var(--off-white);color:rgba(255,255,2
 html.dark .csv-preview-table td{border-color:var(--gray-light);color:rgba(255,255,255,.7)}
 html.dark .csv-submit-block{background:rgba(185,28,28,.15);border-color:rgba(185,28,28,.3);color:#f87171}
 
+/* ── CSV CATEGORY REVIEW ── */
+.csv-review-panel{
+  background:#fff;border:1px solid var(--gray-light);border-radius:12px;
+  padding:20px 20px 16px;margin-bottom:16px;display:none;
+}
+.csv-review-panel.show{display:block}
+.csv-review-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:3px}
+.csv-review-sub{font-size:12.5px;color:var(--gray);margin-bottom:14px}
+.csv-review-table-scroll{overflow-x:auto}
+.csv-review-table{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+.csv-review-table th{
+  padding:7px 10px;text-align:left;font-size:11.5px;font-weight:600;
+  color:var(--gray);text-transform:uppercase;letter-spacing:.04em;
+  border-bottom:2px solid var(--gray-light);white-space:nowrap;
+}
+.csv-review-table td{padding:7px 10px;border-bottom:1px solid var(--gray-light);vertical-align:middle}
+.csv-review-table tr:last-child td{border-bottom:none}
+.csv-review-row-label{color:var(--navy);font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csv-review-row-val{color:var(--gray);font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.cat-badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;
+  cursor:pointer;user-select:none;transition:background .15s,color .15s;border:1.5px solid transparent;white-space:nowrap;
+}
+.cat-badge.revenue{background:#ecfdf5;color:#059669;border-color:#6ee7b7}
+.cat-badge.cogs{background:#fff7ed;color:#d97706;border-color:#fcd34d}
+.cat-badge.opex{background:#eff6ff;color:#3b82f6;border-color:#93c5fd}
+.cat-badge.other{background:#f9fafb;color:#6b7280;border-color:#d1d5db}
+.csv-review-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;align-items:center}
+.csv-review-count{font-size:12px;color:var(--gray);flex:1}
+html.dark .csv-review-panel{background:var(--off-white);border-color:var(--gray-light)}
+html.dark .csv-review-title{color:#e2e8f0}
+html.dark .csv-review-row-label{color:#e2e8f0}
+html.dark .csv-review-row-val{color:rgba(255,255,255,.5)}
+html.dark .csv-review-table th{border-color:var(--gray-light);color:rgba(255,255,255,.5)}
+html.dark .csv-review-table td{border-color:var(--gray-light)}
+html.dark .cat-badge.revenue{background:rgba(5,150,105,.15);color:#34d399;border-color:rgba(52,211,153,.3)}
+html.dark .cat-badge.cogs{background:rgba(217,119,6,.15);color:#fbbf24;border-color:rgba(251,191,36,.3)}
+html.dark .cat-badge.opex{background:rgba(59,130,246,.15);color:#60a5fa;border-color:rgba(96,165,250,.3)}
+html.dark .cat-badge.other{background:rgba(107,114,128,.15);color:#9ca3af;border-color:rgba(156,163,175,.3)}
+
 /* ── UPGRADE PAGE ── */
 .upgrade-nav-dot{
   display:inline-block;width:7px;height:7px;border-radius:50%;
@@ -2082,8 +2122,22 @@ html.dark .manage-sub-text strong{color:white}
                 </div>
               </div>
             </div>
+            <!-- ── CSV CATEGORY REVIEW ── -->
+            <div class="csv-review-panel" id="csv-review-panel">
+              <div class="csv-review-title">Review &amp; categorise line items</div>
+              <div class="csv-review-sub">Click a category badge to change it. Confirm when the categories look right.</div>
+              <div class="csv-review-table-scroll" id="csv-review-table-wrap"></div>
+              <div class="csv-review-actions">
+                <span class="csv-review-count" id="csv-review-count"></span>
+                <button class="btn-secondary" onclick="hideCsvReview()">&#8592; Back to Upload</button>
+                <button class="btn-primary" id="csv-review-submit-btn" onclick="confirmCsvReview()">
+                  <span id="csv-review-submit-text">Confirm &amp; Submit</span>
+                  <div class="spinner" id="csv-review-submit-spinner"></div>
+                </button>
+              </div>
+            </div>
             <div class="csv-submit-block" id="csv-submit-block">Please fix the CSV issues above before submitting</div>
-            <div class="form-submit-row">
+            <div class="form-submit-row" id="form-submit-row">
               <div class="submit-status" id="submit-status"></div>
               <button class="btn-secondary" onclick="showPage('dashboard')">Cancel</button>
               <button class="btn-primary" id="submit-btn" onclick="submitReport()">
@@ -3153,7 +3207,7 @@ window.dismissUpgrade = function() {
 };
 
 // ── SUBMIT REPORT ─────────────────────────────────────────────────────────
-window.submitReport = async function() {
+window.submitReport = async function(categorisedItems) {
   // ── Trial gate ────────────────────────────────────────────────────────
   if (currentFirm?.active === false) {
     if (allReports.length >= 1) { showPaywall('used'); return; }
@@ -3223,6 +3277,7 @@ window.submitReport = async function() {
       portal_client_name: clientName,
       portal_report_id: null,
       ip_address: _trialIp || '',
+      categorised_items: categorisedItems || [],
     };
 
     fetch(MAKE_WEBHOOK_URL, {
@@ -3260,6 +3315,9 @@ window.submitReport = async function() {
       document.getElementById('submit-btn').disabled = false;
       document.getElementById('submit-text').style.opacity = 1;
       document.getElementById('submit-spinner').style.display = 'none';
+      document.getElementById('csv-review-panel').classList.remove('show');
+      document.getElementById('form-submit-row').style.display = '';
+      _categorisedItems = [];
     }, 3000);
 
   } catch (err) {
@@ -3639,11 +3697,23 @@ window.validateCsvFile = async function(file, slot) {
     if (file.size > 5 * 1024 * 1024) {
       _showCsvVal(valEl, 'error', '✗ File too large — maximum 5MB');
       _csvValid[slot] = false;
+      updateSubmitBlocked();
     } else {
       _showCsvVal(valEl, 'good', `✓ Excel file accepted — ${Math.round(file.size/1024)} KB`);
       _csvValid[slot] = true;
+      if (slot === 1) {
+        _categorisedItems = [];
+        const wrap = document.getElementById('csv-review-table-wrap');
+        if (wrap) wrap.innerHTML = '<p style="color:var(--gray);font-size:13px;margin:8px 0 0">Excel file — line-item categorisation is not available for Excel uploads.</p>';
+        const countEl = document.getElementById('csv-review-count');
+        if (countEl) countEl.textContent = '';
+        document.getElementById('csv-review-panel').classList.add('show');
+        document.getElementById('form-submit-row').style.display = 'none';
+        document.getElementById('csv-submit-block').style.display = 'none';
+      } else {
+        updateSubmitBlocked();
+      }
     }
-    updateSubmitBlocked();
     return;
   }
 
@@ -3710,7 +3780,11 @@ window.validateCsvFile = async function(file, slot) {
     : '';
   _showCsvVal(valEl, 'good', `✓ File looks good — ${rows.length} rows, ${maxCols} columns detected${badgeHtml}`);
   _csvValid[slot] = true;
-  updateSubmitBlocked();
+  if (slot === 1) {
+    showCsvReview(rows);
+  } else {
+    updateSubmitBlocked();
+  }
 
   // Preview
   if (previewEl) {
@@ -3755,6 +3829,174 @@ window.updateSubmitBlocked = function() {
   const msg = document.getElementById('csv-submit-block');
   if (btn) btn.disabled = blocked;
   if (msg) msg.classList.toggle('show', blocked);
+};
+
+// ── CSV CATEGORY REVIEW ───────────────────────────────────────────────────
+let _categorisedItems = [];
+
+const _CAT_KEYWORDS = {
+  revenue: ['revenue','sales','income','turnover','fees','receipts','grants','commission','interest received','other income','net revenue','gross revenue','service revenue','product revenue'],
+  cogs:    ['cost of sales','cost of goods','cogs','materials','direct cost','purchases','labour cost','subcontractor','freight','production cost','cost of revenue','direct labour','raw material'],
+  opex:    ['salary','salaries','wages','payroll','rent','rates','utilities','electricity','water','gas','admin','marketing','advertising','professional fees','legal','accountan','depreciation','amortisation','insurance','travel','subscriptions','software','telephone','phone','interest paid','bank charges','bad debt','research','training','office','cleaning','printing'],
+};
+
+function _categKeyword(label) {
+  const l = label.toLowerCase();
+  for (const [cat, kws] of Object.entries(_CAT_KEYWORDS)) {
+    if (kws.some(k => l.includes(k))) return cat;
+  }
+  return 'other';
+}
+
+const _CAT_CYCLE = ['revenue','cogs','opex','other'];
+const _CAT_LABEL = {revenue:'Revenue', cogs:'COGS', opex:'OpEx', other:'Other'};
+
+const _SECTION_HEADERS = [
+  'revenue','cost of goods sold','gross profit','operating expenses',
+  'net profit','cash flow','balance sheet','business information','additional context',
+];
+
+function _isNumericCell(cell) {
+  const n = parseFloat(cell.replace(/[,£$€%\s]/g,''));
+  return !isNaN(n);
+}
+
+window.showCsvReview = async function(rows) {
+  const dataRows = rows.filter((r, i) => {
+    if (i === 0) return false;
+
+    // Skip blank rows
+    if (r.every(c => !c.trim())) return false;
+
+    const label = (r[0] || '').trim();
+    if (!label) return false;
+
+    // Skip section header rows
+    const labelLow = label.toLowerCase();
+    if (_SECTION_HEADERS.some(h => labelLow === h || labelLow.startsWith(h + ' ') || labelLow.endsWith(' ' + h))) return false;
+
+    // Skip narrative / paragraph rows: label has > 15 words
+    if (label.split(/\s+/).length > 15) return false;
+
+    // Skip rows with only 1 column and no comma-separated values
+    if (r.length === 1 && !label.includes(',')) return false;
+
+    // Skip rows where every value cell is non-numeric (metadata rows)
+    const valueCells = r.slice(1).filter(c => c.trim() !== '');
+    if (valueCells.length === 0) return false;
+    if (!valueCells.some(c => _isNumericCell(c))) return false;
+
+    return true;
+  });
+
+  if (dataRows.length === 0) { updateSubmitBlocked(); return; }
+
+  const labelNorms = [...new Set(dataRows.map(r => r[0].trim().toLowerCase()))];
+  let priorMap = {};
+  try {
+    const { data } = await sb.from('category_mappings')
+      .select('label_normalised,category')
+      .eq('firm_id', currentUser.id)
+      .in('label_normalised', labelNorms);
+    if (data) data.forEach(row => { priorMap[row.label_normalised] = row.category; });
+  } catch(e) {}
+
+  const headers = rows[0] || [];
+  const periodHeaders = headers.slice(1).filter(h => h !== '');
+
+  _categorisedItems = dataRows.map(r => {
+    const label = r[0].trim();
+    const norm = label.toLowerCase();
+    const values = r.slice(1);
+    const cat = priorMap[norm] || _categKeyword(label);
+    return { label, label_normalised: norm, values, category: cat };
+  });
+
+  _renderReviewTable(periodHeaders);
+
+  const countEl = document.getElementById('csv-review-count');
+  if (countEl) countEl.textContent = _categorisedItems.length + ' line items';
+
+  document.getElementById('csv-review-panel').classList.add('show');
+  document.getElementById('form-submit-row').style.display = 'none';
+  document.getElementById('csv-submit-block').style.display = 'none';
+};
+
+function _renderReviewTable(periodHeaders) {
+  const wrap = document.getElementById('csv-review-table-wrap');
+  const maxPeriods = Math.min(periodHeaders.length || 1, 3);
+  const periodThs = periodHeaders.length > 0
+    ? periodHeaders.slice(0, maxPeriods).map(h => `<th class="csv-review-row-val">${escHtml(h)}</th>`).join('')
+    : '<th>Value</th>';
+
+  const bodyRows = _categorisedItems.map((item, idx) => {
+    const valTds = periodHeaders.length > 0
+      ? periodHeaders.slice(0, maxPeriods).map((_, pi) =>
+          `<td class="csv-review-row-val">${escHtml(item.values[pi] || '')}</td>`
+        ).join('')
+      : `<td class="csv-review-row-val">${escHtml((item.values[0] || ''))}</td>`;
+    return `<tr>
+      <td><div class="csv-review-row-label" title="${escHtml(item.label)}">${escHtml(item.label)}</div></td>
+      ${valTds}
+      <td><span class="cat-badge ${item.category}" onclick="cycleCatBadge(${idx},this)">${_CAT_LABEL[item.category] || item.category}</span></td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table class="csv-review-table">
+    <thead><tr><th>Line Item</th>${periodThs}<th>Category</th></tr></thead>
+    <tbody>${bodyRows}</tbody>
+  </table>`;
+}
+
+window.cycleCatBadge = function(idx, el) {
+  const cur = _categorisedItems[idx].category;
+  const next = _CAT_CYCLE[(_CAT_CYCLE.indexOf(cur) + 1) % _CAT_CYCLE.length];
+  _categorisedItems[idx].category = next;
+  el.className = 'cat-badge ' + next;
+  el.textContent = _CAT_LABEL[next] || next;
+};
+
+window.hideCsvReview = function() {
+  document.getElementById('csv-review-panel').classList.remove('show');
+  document.getElementById('form-submit-row').style.display = '';
+  const f1 = document.getElementById('csv-file-1');
+  f1.value = ''; if (f1.value) { f1.type = 'text'; f1.type = 'file'; }
+  document.getElementById('upload-name-1').style.display = 'none';
+  const valEl = document.getElementById('csv-validation-1');
+  if (valEl) { valEl.className = 'csv-validation'; valEl.innerHTML = ''; }
+  const prevEl = document.getElementById('csv-preview-wrap-1');
+  if (prevEl) { prevEl.innerHTML = ''; prevEl.classList.remove('show'); }
+  _csvValid[1] = false;
+  _categorisedItems = [];
+  updateSubmitBlocked();
+};
+
+window.confirmCsvReview = async function() {
+  const btn = document.getElementById('csv-review-submit-btn');
+  const txt = document.getElementById('csv-review-submit-text');
+  const spin = document.getElementById('csv-review-submit-spinner');
+  if (btn) btn.disabled = true;
+  if (txt) txt.style.opacity = 0;
+  if (spin) spin.style.display = 'inline-block';
+
+  const upserts = _categorisedItems.map(item => ({
+    firm_id: currentUser.id,
+    label_normalised: item.label_normalised,
+    category: item.category,
+    confirmed_count: 1,
+    last_confirmed_at: new Date().toISOString(),
+  }));
+  try {
+    await sb.from('category_mappings').upsert(upserts, { onConflict: 'firm_id,label_normalised' });
+  } catch(e) {
+    console.warn('category_mappings upsert failed', e);
+  }
+
+  if (btn) btn.disabled = false;
+  if (txt) txt.style.opacity = 1;
+  if (spin) spin.style.display = 'none';
+
+  submitReport([..._categorisedItems]);
 };
 
 window.checkCsvSize = function(file, warnId, sizeId) {
@@ -4561,7 +4803,14 @@ document.addEventListener('keydown', function(e) {
     if (document.getElementById('page-submit')?.classList.contains('active')) {
       const clientName = document.getElementById('f-client-name').value.trim();
       const csvFile = document.getElementById('csv-file-1').files[0];
-      if (clientName && csvFile) { e.preventDefault(); submitReport(); }
+      if (clientName && csvFile) {
+        e.preventDefault();
+        if (document.getElementById('csv-review-panel')?.classList.contains('show')) {
+          confirmCsvReview();
+        } else {
+          submitReport();
+        }
+      }
     }
   }
 });
