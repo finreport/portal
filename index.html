@@ -3697,11 +3697,23 @@ window.validateCsvFile = async function(file, slot) {
     if (file.size > 5 * 1024 * 1024) {
       _showCsvVal(valEl, 'error', '✗ File too large — maximum 5MB');
       _csvValid[slot] = false;
+      updateSubmitBlocked();
     } else {
       _showCsvVal(valEl, 'good', `✓ Excel file accepted — ${Math.round(file.size/1024)} KB`);
       _csvValid[slot] = true;
+      if (slot === 1) {
+        _categorisedItems = [];
+        const wrap = document.getElementById('csv-review-table-wrap');
+        if (wrap) wrap.innerHTML = '<p style="color:var(--gray);font-size:13px;margin:8px 0 0">Excel file — line-item categorisation is not available for Excel uploads.</p>';
+        const countEl = document.getElementById('csv-review-count');
+        if (countEl) countEl.textContent = '';
+        document.getElementById('csv-review-panel').classList.add('show');
+        document.getElementById('form-submit-row').style.display = 'none';
+        document.getElementById('csv-submit-block').style.display = 'none';
+      } else {
+        updateSubmitBlocked();
+      }
     }
-    updateSubmitBlocked();
     return;
   }
 
@@ -4791,7 +4803,14 @@ document.addEventListener('keydown', function(e) {
     if (document.getElementById('page-submit')?.classList.contains('active')) {
       const clientName = document.getElementById('f-client-name').value.trim();
       const csvFile = document.getElementById('csv-file-1').files[0];
-      if (clientName && csvFile) { e.preventDefault(); submitReport(); }
+      if (clientName && csvFile) {
+        e.preventDefault();
+        if (document.getElementById('csv-review-panel')?.classList.contains('show')) {
+          confirmCsvReview();
+        } else {
+          submitReport();
+        }
+      }
     }
   }
 });
