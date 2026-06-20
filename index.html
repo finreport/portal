@@ -3475,6 +3475,7 @@ window.submitReport = async function(categorisedItems) {
       delivery_email: document.getElementById('f-delivery-email')?.value.trim() || currentUser.email,
     };
 
+    const _submittedAt = new Date().toISOString();
     fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3493,7 +3494,7 @@ window.submitReport = async function(categorisedItems) {
     document.getElementById('confirm-title').textContent = `Report submitted for ${clientName}`;
     document.getElementById('confirm-meta').innerHTML =
       `Usually ready within <strong>2 minutes</strong><br>We'll email <strong>${escHtml(currentUser.email||'you')}</strong> when it's ready.`;
-    startCountdown();
+    startCountdown(clientName, _submittedAt);
 
     setTimeout(() => {
       document.getElementById('f-client-name').value = '';
@@ -4511,13 +4512,90 @@ window.checkAccentContrast = function() {
   warn.classList.toggle('show', ratio < 3);
 };
 
-// ── GENERATION PROGRESS INDICATOR ────────────────────────────────────────
-let _genProgressTimer = null;
-// Step durations: Validating 3s, Categorising 5s, Analysing 45s, Generating PDF 20s, Delivering 10s
-const _GEN_STEPS_MS = [3000, 5000, 45000, 20000, 10000];
+// ── GENERATION PROGRESS INDICATOR (poll-driven) ──────────────────────────
+let _genPollInterval  = null;
+let _genPollTimeout   = null;
+let _genPollCount     = 0;   // polls where report row already exists
+let _genCurrentStep   = 0;
+let _genClientName    = '';
+let _genSubmittedAt   = '';
 
-window.startGenProgress = function() {
-  clearTimeout(_genProgressTimer);
+function _setGenStep(n, state) {
+  _genCurrentStep = n;
+  const el = document.getElementById('gs-' + n);
+  if (!el) return;
+  el.className = 'gen-step' + (state ? ' gs-' + state : '');
+  el.querySelector('.gen-step-dot').textContent = state === 'done' ? '✓' : String(n);
+}
+
+function _genMarkAllDone() {
+  clearInterval(_genPollInterval);
+  clearTimeout(_genPollTimeout);
+  [1,2,3,4,5].forEach(n => _setGenStep(n, 'done'));
+  const doneEl = document.getElementById('countdown-done');
+  if (doneEl) doneEl.style.display = 'block';
+}
+
+async function _pollReportStatus() {
+  if (!currentUser) return;
+  try {
+    const { data } = await sb.from('reports')
+      .select('id,status,pdf_url')
+      .eq('firm_id', currentUser.id)
+      .eq('client_name', _genClientName)
+      .gte('created_at', _genSubmittedAt)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const report = data && data[0];
+    if (!report) return; // Row not yet created — stay on step 1
+
+    const status = (report.status || '').toLowerCase();
+
+    // Completion: jump all steps to done immediately
+    if (status === 'delivered' || report.pdf_url) {
+      _genMarkAllDone();
+      return;
+    }
+
+    // Error: stop polling, surface error
+    if (status === 'error' || status === 'failed') {
+      clearInterval(_genPollInterval);
+      clearTimeout(_genPollTimeout);
+      const stepsEl = document.getElementById('gen-steps');
+      if (stepsEl) stepsEl.classList.remove('show');
+      const statusEl = document.getElementById('submit-status');
+      if (statusEl) {
+        statusEl.className = 'submit-status error';
+        statusEl.innerHTML = 'Something went wrong generating this report. We\'ve been notified — please try again in a few minutes.' +
+          ' <button class="btn-secondary" style="font-size:12.5px;padding:5px 12px;margin-left:8px" onclick="document.getElementById(\'submit-status\').className=\'submit-status\'">Try Again</button>';
+      }
+      return;
+    }
+
+    // Row found, still in progress
+    _genPollCount++;
+    if (_genPollCount === 1) {
+      // First sighting of the row: step 1 done → step 2 active
+      _setGenStep(1, 'done');
+      _setGenStep(2, 'active');
+    } else if (_genPollCount === 3) {
+      // 2 further polls with no change: step 2 done → step 3 active
+      _setGenStep(2, 'done');
+      _setGenStep(3, 'active');
+    }
+    // Step 3 stays active until delivered/error/timeout
+  } catch(e) { /* silently ignore transient poll errors */ }
+}
+
+window.startGenProgress = function(clientName, submittedAt) {
+  clearInterval(_genPollInterval);
+  clearTimeout(_genPollTimeout);
+  _genPollCount   = 0;
+  _genCurrentStep = 0;
+  _genClientName  = clientName || '';
+  _genSubmittedAt = submittedAt || new Date().toISOString();
+
   const stepsEl = document.getElementById('gen-steps');
   if (!stepsEl) return;
   stepsEl.classList.add('show');
@@ -4525,28 +4603,22 @@ window.startGenProgress = function() {
     const el = document.getElementById('gs-' + n);
     if (el) { el.className = 'gen-step'; el.querySelector('.gen-step-dot').textContent = n; }
   });
-  let current = 0;
-  function advance() {
-    if (current > 0 && current <= 5) {
-      const prev = document.getElementById('gs-' + current);
-      if (prev) { prev.className = 'gen-step gs-done'; prev.querySelector('.gen-step-dot').textContent = '✓'; }
-    }
-    current++;
-    if (current > 5) {
-      // All steps done — pulse Delivering step until real completion arrives
-      const last = document.getElementById('gs-5');
-      if (last) { last.className = 'gen-step gs-pulse'; last.querySelector('.gen-step-dot').textContent = '5'; }
-      return;
-    }
-    const el = document.getElementById('gs-' + current);
-    if (el) el.className = 'gen-step gs-active';
-    _genProgressTimer = setTimeout(advance, _GEN_STEPS_MS[current - 1]);
-  }
-  advance();
+
+  _setGenStep(1, 'active'); // step 1 immediately active while we wait for row
+
+  _genPollInterval = setInterval(_pollReportStatus, 3000);
+
+  // Safety cap: 3 minutes, then pulse current step and stop
+  _genPollTimeout = setTimeout(() => {
+    clearInterval(_genPollInterval);
+    const el = document.getElementById('gs-' + (_genCurrentStep || 1));
+    if (el && !el.classList.contains('gs-done')) el.className = 'gen-step gs-pulse';
+  }, 3 * 60 * 1000);
 };
 
 window.stopGenProgress = function() {
-  clearTimeout(_genProgressTimer);
+  clearInterval(_genPollInterval);
+  clearTimeout(_genPollTimeout);
   const stepsEl = document.getElementById('gen-steps');
   if (stepsEl) stepsEl.classList.remove('show');
 };
@@ -4826,14 +4898,14 @@ window.selectAcItem = function(e, val) {
 };
 
 // ── SUBMISSION COUNTDOWN ──────────────────────────────────────────────────
-window.startCountdown = function() {
+window.startCountdown = function(clientName, submittedAt) {
   const card = document.getElementById('countdown-card');
   if (!card) return;
   const doneEl = document.getElementById('countdown-done');
   if (doneEl) doneEl.style.display = 'none';
   card.classList.add('show');
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  startGenProgress();
+  startGenProgress(clientName, submittedAt);
 };
 
 window.clearCountdown = function() {
