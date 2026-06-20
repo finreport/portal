@@ -4058,11 +4058,11 @@ const _CAT_EXPENSE_CATCH = [
 ];
 
 // Shared label normalisation — identical in save AND read paths.
-// Strips Unicode/non-breaking spaces, collapses whitespace, NFC-normalises.
+// Uses explicit \u escapes (not raw Unicode bytes) to avoid encoding ambiguity.
 function _normLabel(str) {
   return (str || '')
     .normalize('NFC')
-    .replace(/[   -​  　﻿]+/g, ' ')
+    .replace(/[\u00a0\u1680\u2000-\u200b\u202f\u205f\u3000\ufeff]+/g, ' ')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ');
@@ -4142,18 +4142,43 @@ window.showCsvReview = async function(rows) {
   try {
     const clientId = document.getElementById('f-client-id')?.value || null;
 
-    console.group('[category_mappings] lookup');
-    console.log('Labels being searched (normalised):', labelNorms);
+    // ── DIAGNOSTIC LOGGING ────────────────────────────────────────────────
+    // Step 1: log exact firm_id value being used, its type, and every char code
+    // so any invisible character or casing difference is immediately visible.
+    const firmIdUsed = currentUser?.id;
+    console.group('[category_mappings] lookup diagnostics');
+    console.log('1. firm_id being queried:', JSON.stringify(firmIdUsed),
+      '| type:', typeof firmIdUsed,
+      '| charCodes:', [...(firmIdUsed || '')].map(c => c.charCodeAt(0).toString(16)).join('-'));
+    console.log('2. clientId:', JSON.stringify(clientId));
+    console.log('3. labelNorms to search:', labelNorms);
+
+    // Step 2: sanity-check query — firm_id ONLY, no label filter, no client_id filter.
+    // If this returns 0 rows but DB has rows, the issue is firm_id mismatch or RLS.
+    // Known-good DB firm_id: 7d68e337-8e81-4e83-bec0-4a096fd5939a
+    const { data: sanityRows, error: sanityErr } = await sb
+      .from('category_mappings')
+      .select('id,firm_id,label_normalised,category,client_id')
+      .eq('firm_id', firmIdUsed)
+      .limit(5);
+    console.log('4. Sanity (firm_id only, limit 5):', sanityRows, sanityErr ? sanityErr : '(no error)');
+    if ((!sanityRows || sanityRows.length === 0) && !sanityErr) {
+      console.warn('   ↳ Zero rows even with no label filter.',
+        'This firm_id has no saved mappings yet, OR RLS is blocking reads.',
+        '\n   ↳ Paste in browser console to test directly:',
+        '\n     sb.from("category_mappings").select("*").eq("firm_id","' + firmIdUsed + '").then(r=>console.log("direct test:",r))');
+    }
+    // ── END DIAGNOSTICS ───────────────────────────────────────────────────
 
     // 1. Client-specific mappings first
     if (clientId) {
       const { data: clientData, error: cErr } = await sb.from('category_mappings')
         .select('label_normalised,category')
-        .eq('firm_id', currentUser.id)
+        .eq('firm_id', firmIdUsed)
         .eq('client_id', clientId)
         .in('label_normalised', labelNorms);
-      if (cErr) console.error('client-specific query error:', cErr);
-      console.log('Client-specific results:', clientData);
+      if (cErr) console.error('5a. Client-specific query error:', cErr);
+      console.log('5a. Client-specific results:', clientData);
       if (clientData) clientData.forEach(row => {
         priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
       });
@@ -4161,47 +4186,47 @@ window.showCsvReview = async function(rows) {
 
     // 2. Firm-wide fallback for anything still unmapped
     const unmapped = labelNorms.filter(n => !priorMap[n]);
+    console.log('5b. Unmapped labels → firm-wide query:', unmapped);
     if (unmapped.length) {
       const { data: firmData, error: fErr } = await sb.from('category_mappings')
         .select('label_normalised,category')
-        .eq('firm_id', currentUser.id)
+        .eq('firm_id', firmIdUsed)
         .is('client_id', null)
         .in('label_normalised', unmapped);
-      if (fErr) console.error('firm-wide query error:', fErr);
-      console.log('Firm-wide results:', firmData);
+      if (fErr) console.error('5b. Firm-wide query error:', fErr);
+      console.log('5b. Firm-wide results:', firmData);
       if (firmData) firmData.forEach(row => {
         priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
       });
 
-      // Debug: fetch ALL firm mappings and surface any normalisation mismatch
+      // Step 3: if sanity passed but label query missed, surface normalisation diff
       const stillUnmapped = labelNorms.filter(n => !priorMap[n]);
-      if (stillUnmapped.length) {
+      if (stillUnmapped.length && sanityRows && sanityRows.length > 0) {
         const { data: allMappings } = await sb.from('category_mappings')
           .select('label_normalised,category,client_id')
-          .eq('firm_id', currentUser.id);
-        console.warn('Labels with no mapping found:', stillUnmapped);
-        console.log('All mappings in DB for this firm:', allMappings);
-        if (allMappings && allMappings.length) {
+          .eq('firm_id', firmIdUsed);
+        console.warn('6. Sanity passed but these labels still have no match:', stillUnmapped);
+        console.log('   All DB mappings for this firm:', allMappings);
+        if (allMappings) {
           const dbNorms = allMappings.map(m => m.label_normalised);
           stillUnmapped.forEach(searched => {
-            const exact = dbNorms.find(v => v === searched);
-            if (!exact) {
-              // Collapse all whitespace and compare to surface hidden space diffs
-              const dbCollapsed = dbNorms.find(v => v.replace(/\s+/g,'') === searched.replace(/\s+/g,''));
-              console.warn(
-                `  no match for: ${JSON.stringify(searched)}`,
-                dbCollapsed ? `→ whitespace mismatch with DB value: ${JSON.stringify(dbCollapsed)}` : '(no close match in DB)'
-              );
-            }
+            const wsCollapsed = dbNorms.find(v => v.replace(/\s+/g,'') === searched.replace(/\s+/g,''));
+            console.warn(
+              `   searched: ${JSON.stringify(searched)}`,
+              wsCollapsed
+                ? `→ whitespace-only diff with DB: ${JSON.stringify(wsCollapsed)}`
+                : '(no close match in DB — label not yet confirmed)'
+            );
           });
         }
       }
     }
 
-    console.log('priorMap after lookup:', priorMap);
+    console.log('7. Final priorMap:', priorMap);
     console.groupEnd();
   } catch(e) {
     console.error('[category_mappings] lookup threw:', e);
+    console.groupEnd();
   }
 
   const headers = rows[0] || [];
