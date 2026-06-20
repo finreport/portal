@@ -731,16 +731,6 @@ html.dark .trial-banner-text{color:rgba(255,255,255,.85)}
 }
 .countdown-card.show{display:block}
 .countdown-title{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px}
-.countdown-sub{font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.5}
-.countdown-bar-wrap{
-  background:var(--gray-light);border-radius:100px;height:8px;
-  max-width:320px;margin:0 auto 16px;overflow:hidden;
-}
-.countdown-bar-fill{
-  height:100%;background:linear-gradient(to right,var(--teal),var(--teal-light));
-  border-radius:100px;width:100%;transition:width 1s linear;
-}
-.countdown-time{font-family:'DM Serif Display',serif;font-size:34px;color:var(--teal);margin-bottom:6px}
 .countdown-done{font-size:13px;color:var(--green);font-weight:500;display:none}
 
 /* ── LOGO FILE UPLOAD ── */
@@ -1255,7 +1245,6 @@ html.dark .bell-item-time{color:rgba(255,255,255,.58)}
 html.dark .bell-empty-sub{color:rgba(255,255,255,.6)}
 
 /* Countdown */
-html.dark .countdown-sub{color:rgba(255,255,255,.7)}
 html.dark .countdown-done{color:#4ade80}
 
 /* Session timeout modal */
@@ -1481,6 +1470,8 @@ html.dark .csv-review-confirm-label{color:#e2e8f0}
 .gen-steps.show{display:flex}
 .gen-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray);padding:4px 0;transition:color .4s}
 .gen-step.gs-active{color:var(--navy);font-weight:600}
+@keyframes gs-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.gen-step.gs-pulse{color:var(--teal);font-weight:600;animation:gs-pulse 1.6s ease-in-out infinite}
 .gen-step.gs-done{color:var(--green)}
 .gen-step-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--gray-light);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .4s}
 .gen-step.gs-active .gen-step-dot{border-color:var(--teal);background:var(--teal);color:#fff}
@@ -2302,7 +2293,7 @@ html.dark .manage-sub-text strong{color:white}
               <svg viewBox="0 0 24 24"><polyline class="check-mark" points="20 6 9 17 4 12"/></svg>
             </div>
             <div class="submit-confirm-title" id="confirm-title">Report submitted!</div>
-            <p class="submit-confirm-meta" id="confirm-meta">Estimated delivery: <strong>10–15 minutes</strong></p>
+            <p class="submit-confirm-meta" id="confirm-meta">Usually ready within <strong>2 minutes</strong></p>
             <div class="submit-confirm-divider"></div>
           </div>
           <div class="countdown-title">⚙️ Generating your report</div>
@@ -2313,11 +2304,6 @@ html.dark .manage-sub-text strong{color:white}
             <div class="gen-step" id="gs-4"><div class="gen-step-dot">4</div>Generating PDF</div>
             <div class="gen-step" id="gs-5"><div class="gen-step-dot">5</div>Delivering report</div>
           </div>
-          <div class="countdown-sub" id="countdown-sub">Our AI is analysing your financial data. Typical time is 10–15 minutes.</div>
-          <div class="countdown-bar-wrap">
-            <div class="countdown-bar-fill" id="countdown-bar"></div>
-          </div>
-          <div class="countdown-time" id="countdown-time">15:00</div>
           <div class="countdown-done" id="countdown-done">✓ Should be in your inbox now — check your email!</div>
         </div>
       </div>
@@ -3436,7 +3422,6 @@ window.submitReport = async function(categorisedItems) {
   }
 
   setSubmitLoading(true);
-  startGenProgress();
   document.getElementById('submit-status').className = 'submit-status loading';
   document.getElementById('submit-status').textContent = 'Uploading data and generating report…';
 
@@ -3507,8 +3492,8 @@ window.submitReport = async function(categorisedItems) {
     showToast('Report submitted successfully!', 'success');
     document.getElementById('confirm-title').textContent = `Report submitted for ${clientName}`;
     document.getElementById('confirm-meta').innerHTML =
-      `Estimated delivery: <strong>10–15 minutes</strong><br>We'll email <strong>${escHtml(currentUser.email||'you')}</strong> when it's ready.`;
-    startCountdown(15);
+      `Usually ready within <strong>2 minutes</strong><br>We'll email <strong>${escHtml(currentUser.email||'you')}</strong> when it's ready.`;
+    startCountdown();
 
     setTimeout(() => {
       document.getElementById('f-client-name').value = '';
@@ -4424,16 +4409,71 @@ window.renderClientsPage = async function() {
     const key = c.id;
     const count = reportCounts[key] || 0;
     const lastDate = reportDates[key] ? formatDate(reportDates[key]) : '—';
-    return `<tr>
+    return `<tr id="client-row-${escHtml(c.id)}">
       <td style="font-weight:500">${escHtml(c.client_name)}</td>
       <td style="color:var(--gray)">${escHtml(c.client_email||'—')}</td>
       <td style="color:var(--gray)">${escHtml(c.industry||'—')}</td>
       <td>${count}</td>
       <td style="color:var(--gray)">${lastDate}</td>
-      <td><button class="btn-issue" onclick="filterToClient('${escHtml(c.client_name)}')">View reports →</button></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-issue" onclick="editClient('${c.id}')">Edit</button>
+        <button class="btn-issue" onclick="filterToClient('${escHtml(c.client_name)}')">Reports →</button>
+      </td>
     </tr>`;
   }).join('');
   tbody.innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px">No clients yet. Click "+ Add Client" to get started.</td></tr>`;
+};
+
+// ── CLIENT EDIT ───────────────────────────────────────────────────────────
+window.editClient = function(id) {
+  const c = allClients.find(x => x.id === id);
+  if (!c) return;
+  const row = document.getElementById('client-row-' + id);
+  if (!row) return;
+  row.innerHTML = `<td colspan="6" style="padding:12px 8px">
+    <div class="client-add-form-grid" style="margin:0 0 10px">
+      <div>
+        <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px">Client Name</label>
+        <input class="form-input" id="cedit-name-${id}" value="${escHtml(c.client_name)}" placeholder="Client name">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px">Email</label>
+        <input class="form-input" id="cedit-email-${id}" type="email" value="${escHtml(c.client_email||'')}" placeholder="Client email">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px">Industry</label>
+        <input class="form-input" id="cedit-industry-${id}" value="${escHtml(c.industry||'')}" placeholder="Industry">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" style="font-size:13px;padding:6px 16px" onclick="saveClientEdit('${id}')">Save changes</button>
+      <button class="btn-secondary" style="font-size:13px;padding:6px 12px" onclick="renderClientsPage()">Cancel</button>
+    </div>
+  </td>`;
+};
+
+window.saveClientEdit = async function(id) {
+  const nameEl = document.getElementById('cedit-name-' + id);
+  const emailEl = document.getElementById('cedit-email-' + id);
+  const indEl = document.getElementById('cedit-industry-' + id);
+  const name = (nameEl?.value || '').trim();
+  const email = (emailEl?.value || '').trim();
+  const industry = (indEl?.value || '').trim();
+  if (!name) { showToast('Client name is required', 'error'); return; }
+  try {
+    const { data, error } = await sb.from('clients')
+      .update({ client_name: name, client_email: email || null, industry: industry || null, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('firm_id', currentUser.id)
+      .select()
+      .single();
+    if (error) throw error;
+    const idx = allClients.findIndex(c => c.id === id);
+    if (idx !== -1) allClients[idx] = data;
+    populateClientDropdown();
+    renderClientsPage();
+    showToast('Client updated', 'success');
+  } catch(e) { showToast('Could not update client: ' + (e.message || e), 'error'); }
 };
 
 // ── LOGO RESOLUTION CHECK ─────────────────────────────────────────────────
@@ -4473,9 +4513,11 @@ window.checkAccentContrast = function() {
 
 // ── GENERATION PROGRESS INDICATOR ────────────────────────────────────────
 let _genProgressTimer = null;
-const _GEN_STEPS_MS = [0, 2500, 6000, 10000, 17000]; // when each step activates
+// Step durations: Validating 3s, Categorising 5s, Analysing 45s, Generating PDF 20s, Delivering 10s
+const _GEN_STEPS_MS = [3000, 5000, 45000, 20000, 10000];
 
 window.startGenProgress = function() {
+  clearTimeout(_genProgressTimer);
   const stepsEl = document.getElementById('gen-steps');
   if (!stepsEl) return;
   stepsEl.classList.add('show');
@@ -4491,16 +4533,14 @@ window.startGenProgress = function() {
     }
     current++;
     if (current > 5) {
-      // Loop last step as "Delivering…"
+      // All steps done — pulse Delivering step until real completion arrives
       const last = document.getElementById('gs-5');
-      if (last) last.className = 'gen-step gs-active';
-      _genProgressTimer = setTimeout(advance, 8000);
+      if (last) { last.className = 'gen-step gs-pulse'; last.querySelector('.gen-step-dot').textContent = '5'; }
       return;
     }
     const el = document.getElementById('gs-' + current);
     if (el) el.className = 'gen-step gs-active';
-    const delay = current < 5 ? _GEN_STEPS_MS[current] - (current > 1 ? _GEN_STEPS_MS[current-1] : 0) : 8000;
-    _genProgressTimer = setTimeout(advance, delay < 500 ? 2500 : delay);
+    _genProgressTimer = setTimeout(advance, _GEN_STEPS_MS[current - 1]);
   }
   advance();
 };
@@ -4786,39 +4826,18 @@ window.selectAcItem = function(e, val) {
 };
 
 // ── SUBMISSION COUNTDOWN ──────────────────────────────────────────────────
-let _cdTimer = null;
-
-window.startCountdown = function(mins) {
+window.startCountdown = function() {
   const card = document.getElementById('countdown-card');
-  const timeEl = document.getElementById('countdown-time');
-  const barEl = document.getElementById('countdown-bar');
-  const doneEl = document.getElementById('countdown-done');
   if (!card) return;
-  clearInterval(_cdTimer);
+  const doneEl = document.getElementById('countdown-done');
+  if (doneEl) doneEl.style.display = 'none';
   card.classList.add('show');
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  let secs = mins * 60;
-  const total = secs;
-  doneEl.style.display = 'none';
-  barEl.style.width = '100%';
-  const tick = () => {
-    secs--;
-    if (secs <= 0) {
-      clearInterval(_cdTimer);
-      timeEl.textContent = '0:00';
-      barEl.style.width = '0%';
-      doneEl.style.display = 'block';
-      return;
-    }
-    timeEl.textContent = `${Math.floor(secs/60)}:${(secs%60).toString().padStart(2,'0')}`;
-    barEl.style.width = ((secs / total) * 100) + '%';
-  };
-  tick();
-  _cdTimer = setInterval(tick, 1000);
+  startGenProgress();
 };
 
 window.clearCountdown = function() {
-  clearInterval(_cdTimer);
+  stopGenProgress();
   const card = document.getElementById('countdown-card');
   if (card) card.classList.remove('show');
 };
