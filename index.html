@@ -4057,6 +4057,17 @@ const _CAT_EXPENSE_CATCH = [
   'outgoing','outgoings','payment','payments',
 ];
 
+// Shared label normalisation — identical in save AND read paths.
+// Strips Unicode/non-breaking spaces, collapses whitespace, NFC-normalises.
+function _normLabel(str) {
+  return (str || '')
+    .normalize('NFC')
+    .replace(/[   -​  　﻿]+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
 function _categKeyword(label) {
   if (_isSummaryRow(label)) return 'ignore';
   const l = label.toLowerCase();
@@ -4125,41 +4136,80 @@ window.showCsvReview = async function(rows) {
 
   if (dataRows.length === 0) { updateSubmitBlocked(); return; }
 
-  const labelNorms = [...new Set(dataRows.map(r => r[0].trim().toLowerCase()))];
+  // Use _normLabel for the lookup keys — same function used when saving
+  const labelNorms = [...new Set(dataRows.map(r => _normLabel(r[0])))];
   let priorMap = {};
   try {
     const clientId = document.getElementById('f-client-id')?.value || null;
-    // Try client-specific mappings first, then fall back to firm-wide
+
+    console.group('[category_mappings] lookup');
+    console.log('Labels being searched (normalised):', labelNorms);
+
+    // 1. Client-specific mappings first
     if (clientId) {
-      const { data: clientData } = await sb.from('category_mappings')
+      const { data: clientData, error: cErr } = await sb.from('category_mappings')
         .select('label_normalised,category')
         .eq('firm_id', currentUser.id)
         .eq('client_id', clientId)
         .in('label_normalised', labelNorms);
+      if (cErr) console.error('client-specific query error:', cErr);
+      console.log('Client-specific results:', clientData);
       if (clientData) clientData.forEach(row => {
         priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
       });
     }
-    // Fill in any gaps from firm-wide mappings
+
+    // 2. Firm-wide fallback for anything still unmapped
     const unmapped = labelNorms.filter(n => !priorMap[n]);
     if (unmapped.length) {
-      const { data: firmData } = await sb.from('category_mappings')
+      const { data: firmData, error: fErr } = await sb.from('category_mappings')
         .select('label_normalised,category')
         .eq('firm_id', currentUser.id)
         .is('client_id', null)
         .in('label_normalised', unmapped);
+      if (fErr) console.error('firm-wide query error:', fErr);
+      console.log('Firm-wide results:', firmData);
       if (firmData) firmData.forEach(row => {
         priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
       });
+
+      // Debug: fetch ALL firm mappings and surface any normalisation mismatch
+      const stillUnmapped = labelNorms.filter(n => !priorMap[n]);
+      if (stillUnmapped.length) {
+        const { data: allMappings } = await sb.from('category_mappings')
+          .select('label_normalised,category,client_id')
+          .eq('firm_id', currentUser.id);
+        console.warn('Labels with no mapping found:', stillUnmapped);
+        console.log('All mappings in DB for this firm:', allMappings);
+        if (allMappings && allMappings.length) {
+          const dbNorms = allMappings.map(m => m.label_normalised);
+          stillUnmapped.forEach(searched => {
+            const exact = dbNorms.find(v => v === searched);
+            if (!exact) {
+              // Collapse all whitespace and compare to surface hidden space diffs
+              const dbCollapsed = dbNorms.find(v => v.replace(/\s+/g,'') === searched.replace(/\s+/g,''));
+              console.warn(
+                `  no match for: ${JSON.stringify(searched)}`,
+                dbCollapsed ? `→ whitespace mismatch with DB value: ${JSON.stringify(dbCollapsed)}` : '(no close match in DB)'
+              );
+            }
+          });
+        }
+      }
     }
-  } catch(e) {}
+
+    console.log('priorMap after lookup:', priorMap);
+    console.groupEnd();
+  } catch(e) {
+    console.error('[category_mappings] lookup threw:', e);
+  }
 
   const headers = rows[0] || [];
   const periodHeaders = headers.slice(1).filter(h => h !== '');
 
   _categorisedItems = dataRows.map(r => {
     const label = r[0].trim();
-    const norm = label.toLowerCase();
+    const norm = _normLabel(r[0]);   // same function as the lookup above
     const values = r.slice(1);
     const prior = priorMap[norm];
     const cat = prior || _categKeyword(label);
@@ -4260,18 +4310,41 @@ window.confirmCsvReview = async function() {
 
   const activeItems = _categorisedItems.filter(i => i.category !== 'ignore');
   const clientId = document.getElementById('f-client-id')?.value || null;
-  const upserts = activeItems.map(item => ({
+  const now = new Date().toISOString();
+
+  // Pass 1 — always write firm-wide rows (client_id IS NULL).
+  // Uses the partial index: UNIQUE(firm_id, label_normalised) WHERE client_id IS NULL.
+  // This ensures firm-wide lookups always return results regardless of client selection.
+  const firmWide = activeItems.map(item => ({
     firm_id: currentUser.id,
     label_normalised: item.label_normalised,
     category: item.category,
-    client_id: clientId || null,
+    client_id: null,
     confirmed_count: 1,
-    last_confirmed_at: new Date().toISOString(),
+    last_confirmed_at: now,
   }));
-  try {
-    if (upserts.length) await sb.from('category_mappings').upsert(upserts, { onConflict: 'firm_id,label_normalised' });
-  } catch(e) {
-    console.warn('category_mappings upsert failed', e);
+  if (firmWide.length) {
+    const { error: fwErr } = await sb.from('category_mappings')
+      .upsert(firmWide, { onConflict: 'firm_id,label_normalised' });
+    if (fwErr) console.warn('category_mappings firm-wide upsert failed:', fwErr);
+  }
+
+  // Pass 2 — if a client is selected, also write client-specific rows.
+  // Uses the partial index: UNIQUE(firm_id, client_id, label_normalised) WHERE client_id IS NOT NULL.
+  if (clientId) {
+    const clientSpecific = activeItems.map(item => ({
+      firm_id: currentUser.id,
+      label_normalised: item.label_normalised,
+      category: item.category,
+      client_id: clientId,
+      confirmed_count: 1,
+      last_confirmed_at: now,
+    }));
+    if (clientSpecific.length) {
+      const { error: csErr } = await sb.from('category_mappings')
+        .upsert(clientSpecific, { onConflict: 'firm_id,client_id,label_normalised' });
+      if (csErr) console.warn('category_mappings client-specific upsert failed:', csErr);
+    }
   }
 
   if (btn) btn.disabled = false;
