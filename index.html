@@ -4156,11 +4156,23 @@ window.showCsvReview = async function(rows) {
     // Step 2: sanity-check query — firm_id ONLY, no label filter, no client_id filter.
     // If this returns 0 rows but DB has rows, the issue is firm_id mismatch or RLS.
     // Known-good DB firm_id: 7d68e337-8e81-4e83-bec0-4a096fd5939a
-    const { data: sanityRows, error: sanityErr } = await sb
+    const _sanityResp = await sb
       .from('category_mappings')
-      .select('id,firm_id,label_normalised,category,client_id')
+      .select('*')
       .eq('firm_id', firmIdUsed)
       .limit(5);
+    const sanityRows = _sanityResp.data;
+    const sanityErr = _sanityResp.error;
+    // Log FULL raw response — status, statusText, error, and first row JSON-serialised.
+    // JSON.stringify captures the object at call time (no lazy DevTools reference issue).
+    console.log('4. RAW sanity response:', JSON.stringify({
+      status: _sanityResp.status,
+      statusText: _sanityResp.statusText,
+      error: _sanityResp.error,
+      data_length: _sanityResp.data?.length,
+      row0_JSON: JSON.stringify(_sanityResp.data?.[0]),
+      row0_keys: Object.keys(_sanityResp.data?.[0] || {})
+    }));
     console.log('4. Sanity (firm_id only, limit 5):', sanityRows, sanityErr ? sanityErr : '(no error)');
     if ((!sanityRows || sanityRows.length === 0) && !sanityErr) {
       console.warn('   ↳ Zero rows even with no label filter.',
@@ -4172,12 +4184,18 @@ window.showCsvReview = async function(rows) {
 
     // 1. Client-specific mappings first
     if (clientId) {
-      const { data: clientData, error: cErr } = await sb.from('category_mappings')
-        .select('label_normalised,category')
+      const _clientResp = await sb.from('category_mappings')
+        .select('*')
         .eq('firm_id', firmIdUsed)
         .eq('client_id', clientId)
         .in('label_normalised', labelNorms);
+      const clientData = _clientResp.data;
+      const cErr = _clientResp.error;
       if (cErr) console.error('5a. Client-specific query error:', cErr);
+      console.log('5a. Client-specific RAW:', JSON.stringify({
+        status: _clientResp.status, error: _clientResp.error,
+        data_length: _clientResp.data?.length, row0_JSON: JSON.stringify(_clientResp.data?.[0])
+      }));
       console.log('5a. Client-specific results:', clientData);
       if (clientData) clientData.forEach(row => {
         priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
@@ -4188,12 +4206,18 @@ window.showCsvReview = async function(rows) {
     const unmapped = labelNorms.filter(n => !priorMap[n]);
     console.log('5b. Unmapped labels → firm-wide query:', unmapped);
     if (unmapped.length) {
-      const { data: firmData, error: fErr } = await sb.from('category_mappings')
-        .select('label_normalised,category')
+      const _firmResp = await sb.from('category_mappings')
+        .select('*')
         .eq('firm_id', firmIdUsed)
         .is('client_id', null)
         .in('label_normalised', unmapped);
+      const firmData = _firmResp.data;
+      const fErr = _firmResp.error;
       if (fErr) console.error('5b. Firm-wide query error:', fErr);
+      console.log('5b. Firm-wide RAW:', JSON.stringify({
+        status: _firmResp.status, error: _firmResp.error,
+        data_length: _firmResp.data?.length, row0_JSON: JSON.stringify(_firmResp.data?.[0])
+      }));
       console.log('5b. Firm-wide results:', firmData);
       if (firmData) firmData.forEach(row => {
         priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
@@ -4203,7 +4227,7 @@ window.showCsvReview = async function(rows) {
       const stillUnmapped = labelNorms.filter(n => !priorMap[n]);
       if (stillUnmapped.length && sanityRows && sanityRows.length > 0) {
         const { data: allMappings } = await sb.from('category_mappings')
-          .select('label_normalised,category,client_id')
+          .select('*')
           .eq('firm_id', firmIdUsed);
         console.warn('6. Sanity passed but these labels still have no match:', stillUnmapped);
         console.log('   All DB mappings for this firm:', allMappings);
