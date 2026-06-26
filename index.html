@@ -1510,6 +1510,26 @@ html.dark .badge-reviewed{background:rgba(217,119,6,.15);border-color:rgba(251,1
 .client-add-actions{display:flex;gap:8px;justify-content:flex-end}
 html.dark .client-add-form{background:rgba(255,255,255,.05)}
 
+/* ── CLIENTS TABLE ACTION BUTTONS ── */
+.btn-sm-secondary{
+  background:white;color:var(--text);border:1px solid var(--gray-light);
+  border-radius:6px;padding:6px 12px;font-size:12px;font-weight:500;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  white-space:nowrap;
+}
+.btn-sm-secondary:hover{border-color:var(--teal);color:var(--teal)}
+.btn-sm-primary{
+  background:var(--teal);color:white;border:none;
+  border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;
+  white-space:nowrap;
+}
+.btn-sm-primary:hover{background:var(--teal-light)}
+html.dark .btn-sm-secondary{background:var(--white);border-color:var(--gray-light);color:var(--text)}
+/* Ensure actions column cells don't stretch with flex — use div wrapper inside td */
+#clients-table td:last-child{width:1px;white-space:nowrap}
+#clients-table th:last-child{width:1px}
+
 /* ── UPGRADE GATE ── */
 .upgrade-gate{text-align:center;padding:60px 24px;max-width:380px;margin:0 auto}
 .upgrade-gate-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:8px}
@@ -4539,9 +4559,11 @@ window.renderClientsPage = async function() {
       <td style="color:var(--gray)">${escHtml(c.industry||'—')}</td>
       <td>${count}</td>
       <td style="color:var(--gray)">${lastDate}</td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn-issue" onclick="editClient('${c.id}')">Edit</button>
-        <button class="btn-issue" onclick="filterToClient('${escHtml(c.client_name)}')">Reports →</button>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn-sm-secondary" onclick="editClient('${c.id}')">Edit</button>
+          <button class="btn-sm-primary" onclick="filterToClient('${escHtml(c.client_name)}')">Reports →</button>
+        </div>
       </td>
     </tr>`;
   }).join('');
