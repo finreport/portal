@@ -4053,6 +4053,10 @@ window.updateSubmitBlocked = function() {
 
 // ── CSV CATEGORY REVIEW ───────────────────────────────────────────────────
 let _categorisedItems = [];
+// Bumped on every showCsvReview() call. An in-flight async lookup compares its
+// captured value against this; if a newer upload has started, the stale lookup
+// abandons its render so it can't clobber the newer one (race guard).
+let _csvReviewSeq = 0;
 
 const _CAT_KEYWORDS = {
   cogs: [
@@ -4086,6 +4090,20 @@ function _normLabel(str) {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ');
+}
+
+// Looser key for matching "similar" labels — collapses punctuation and treats
+// "&" the same as "and", so "Rent & Rates" still matches "Rent and Rates" and
+// "Salaries, Staff" matches "Salaries Staff". Built ON TOP of _normLabel output
+// and only ever used as a fallback AFTER an exact _normLabel match fails, so it
+// never weakens exact matching and never changes what gets stored (existing
+// rows keep matching with their original normalisation).
+function _fuzzyKey(norm) {
+  return (norm || '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function _categKeyword(label) {
@@ -4156,121 +4174,75 @@ window.showCsvReview = async function(rows) {
 
   if (dataRows.length === 0) { updateSubmitBlocked(); return; }
 
-  // Use _normLabel for the lookup keys — same function used when saving
+  // ── CATEGORY MEMORY LOOKUP ────────────────────────────────────────────────
+  // Resolve each line item's remembered category with this precedence:
+  //   1. exact client-specific   2. exact firm-wide
+  //   3. fuzzy client-specific   4. fuzzy firm-wide
+  // Exact matches use _normLabel keys (byte-identical to the save path). Fuzzy
+  // matches use _fuzzyKey so near-identical labels still resolve. A client's own
+  // mapping always beats the firm-wide default, so repeat uploads for the SAME
+  // client stay correct even if another client later overwrites the firm-wide
+  // value for the same label. Other clients' mappings are never consulted.
   const labelNorms = [...new Set(dataRows.map(r => _normLabel(r[0])))];
-  let priorMap = {};
+  const priorMap = {};      // norm -> remembered category
+  const priorExact = {};    // norm -> true when matched exactly (vs fuzzily)
+  const _seq = ++_csvReviewSeq;
+  const clientId = document.getElementById('f-client-id')?.value || null;
+  const firmId = currentUser?.id;
   try {
-    const clientId = document.getElementById('f-client-id')?.value || null;
-
-    // ── DIAGNOSTIC LOGGING ────────────────────────────────────────────────
-    // Step 1: log exact firm_id value being used, its type, and every char code
-    // so any invisible character or casing difference is immediately visible.
-    const firmIdUsed = currentUser?.id;
-    console.group('[category_mappings] lookup diagnostics');
-    console.log('1. firm_id being queried:', JSON.stringify(firmIdUsed),
-      '| type:', typeof firmIdUsed,
-      '| charCodes:', [...(firmIdUsed || '')].map(c => c.charCodeAt(0).toString(16)).join('-'));
-    console.log('2. clientId:', JSON.stringify(clientId));
-    console.log('3. labelNorms to search:', labelNorms);
-
-    // Step 2: sanity-check query — firm_id ONLY, no label filter, no client_id filter.
-    // If this returns 0 rows but DB has rows, the issue is firm_id mismatch or RLS.
-    // Known-good DB firm_id: 7d68e337-8e81-4e83-bec0-4a096fd5939a
-    const _sanityResp = await sb
-      .from('category_mappings')
-      .select('*')
-      .eq('firm_id', firmIdUsed)
-      .limit(5);
-    const sanityRows = _sanityResp.data;
-    const sanityErr = _sanityResp.error;
-    // Log FULL raw response — status, statusText, error, and first row JSON-serialised.
-    // JSON.stringify captures the object at call time (no lazy DevTools reference issue).
-    console.log('4. RAW sanity response:', JSON.stringify({
-      status: _sanityResp.status,
-      statusText: _sanityResp.statusText,
-      error: _sanityResp.error,
-      data_length: _sanityResp.data?.length,
-      row0_JSON: JSON.stringify(_sanityResp.data?.[0]),
-      row0_keys: Object.keys(_sanityResp.data?.[0] || {})
-    }));
-    console.log('4. Sanity (firm_id only, limit 5):', sanityRows, sanityErr ? sanityErr : '(no error)');
-    if ((!sanityRows || sanityRows.length === 0) && !sanityErr) {
-      console.warn('   ↳ Zero rows even with no label filter.',
-        'This firm_id has no saved mappings yet, OR RLS is blocking reads.',
-        '\n   ↳ Paste in browser console to test directly:',
-        '\n     sb.from("category_mappings").select("*").eq("firm_id","' + firmIdUsed + '").then(r=>console.log("direct test:",r))');
-    }
-    // ── END DIAGNOSTICS ───────────────────────────────────────────────────
-
-    // 1. Client-specific mappings first
-    if (clientId) {
-      const _clientResp = await sb.from('category_mappings')
-        .select('*')
-        .eq('firm_id', firmIdUsed)
-        .eq('client_id', clientId)
+    if (firmId) {
+      // Exact matches first — a bounded query on just this CSV's labels, so it
+      // can never hit PostgREST's default row cap and is always reliable.
+      const { data: exactRows, error: exErr } = await sb.from('category_mappings')
+        .select('label_normalised,category,client_id')
+        .eq('firm_id', firmId)
         .in('label_normalised', labelNorms);
-      const clientData = _clientResp.data;
-      const cErr = _clientResp.error;
-      if (cErr) console.error('5a. Client-specific query error:', cErr);
-      console.log('5a. Client-specific RAW:', JSON.stringify({
-        status: _clientResp.status, error: _clientResp.error,
-        data_length: _clientResp.data?.length, row0_JSON: JSON.stringify(_clientResp.data?.[0])
-      }));
-      console.log('5a. Client-specific results:', clientData);
-      if (clientData) clientData.forEach(row => {
-        priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
-      });
-    }
+      if (exErr) console.warn('[category_mappings] exact lookup error:', exErr);
+      if (_seq !== _csvReviewSeq) return;   // a newer upload owns the render now
 
-    // 2. Firm-wide fallback for anything still unmapped
-    const unmapped = labelNorms.filter(n => !priorMap[n]);
-    console.log('5b. Unmapped labels → firm-wide query:', unmapped);
-    if (unmapped.length) {
-      const _firmResp = await sb.from('category_mappings')
-        .select('*')
-        .eq('firm_id', firmIdUsed)
-        .is('client_id', null)
-        .in('label_normalised', unmapped);
-      const firmData = _firmResp.data;
-      const fErr = _firmResp.error;
-      if (fErr) console.error('5b. Firm-wide query error:', fErr);
-      console.log('5b. Firm-wide RAW:', JSON.stringify({
-        status: _firmResp.status, error: _firmResp.error,
-        data_length: _firmResp.data?.length, row0_JSON: JSON.stringify(_firmResp.data?.[0])
-      }));
-      console.log('5b. Firm-wide results:', firmData);
-      if (firmData) firmData.forEach(row => {
-        priorMap[row.label_normalised] = row.category === 'other' ? 'revenue' : row.category;
+      const clientExact = {}, firmExact = {};
+      (exactRows || []).forEach(row => {
+        const cat = row.category === 'other' ? 'revenue' : row.category;
+        if (clientId && row.client_id === clientId) clientExact[row.label_normalised] = cat;
+        else if (!row.client_id) firmExact[row.label_normalised] = cat;
+      });
+      labelNorms.forEach(norm => {
+        if (norm in clientExact)    { priorMap[norm] = clientExact[norm]; priorExact[norm] = true; }
+        else if (norm in firmExact) { priorMap[norm] = firmExact[norm];   priorExact[norm] = true; }
       });
 
-      // Step 3: if sanity passed but label query missed, surface normalisation diff
-      const stillUnmapped = labelNorms.filter(n => !priorMap[n]);
-      if (stillUnmapped.length && sanityRows && sanityRows.length > 0) {
-        const { data: allMappings } = await sb.from('category_mappings')
-          .select('*')
-          .eq('firm_id', firmIdUsed);
-        console.warn('6. Sanity passed but these labels still have no match:', stillUnmapped);
-        console.log('   All DB mappings for this firm:', allMappings);
-        if (allMappings) {
-          const dbNorms = allMappings.map(m => m.label_normalised);
-          stillUnmapped.forEach(searched => {
-            const wsCollapsed = dbNorms.find(v => v.replace(/\s+/g,'') === searched.replace(/\s+/g,''));
-            console.warn(
-              `   searched: ${JSON.stringify(searched)}`,
-              wsCollapsed
-                ? `→ whitespace-only diff with DB: ${JSON.stringify(wsCollapsed)}`
-                : '(no close match in DB — label not yet confirmed)'
-            );
-          });
-        }
+      // Fuzzy fallback for whatever is still unmatched. This needs the firm's
+      // whole mapping set (a stored label's fuzzy key can't be pre-filtered),
+      // capped high — exact matches above are already guaranteed regardless.
+      const stillUnmatched = labelNorms.filter(n => !(n in priorMap));
+      if (stillUnmatched.length) {
+        const { data: allRows, error: allErr } = await sb.from('category_mappings')
+          .select('label_normalised,category,client_id')
+          .eq('firm_id', firmId)
+          .limit(2000);
+        if (allErr) console.warn('[category_mappings] fuzzy lookup error:', allErr);
+        if (_seq !== _csvReviewSeq) return;   // stale-guard after the 2nd await
+
+        const clientFuzzy = {}, firmFuzzy = {};
+        (allRows || []).forEach(row => {
+          const cat = row.category === 'other' ? 'revenue' : row.category;
+          const fk = _fuzzyKey(row.label_normalised);
+          if (clientId && row.client_id === clientId) { if (!(fk in clientFuzzy)) clientFuzzy[fk] = cat; }
+          else if (!row.client_id) { if (!(fk in firmFuzzy)) firmFuzzy[fk] = cat; }
+        });
+        stillUnmatched.forEach(norm => {
+          const fk = _fuzzyKey(norm);
+          if (fk in clientFuzzy)    { priorMap[norm] = clientFuzzy[fk]; priorExact[norm] = false; }
+          else if (fk in firmFuzzy) { priorMap[norm] = firmFuzzy[fk];   priorExact[norm] = false; }
+        });
       }
-    }
 
-    console.log('7. Final priorMap:', priorMap);
-    console.groupEnd();
+      console.log('[category_mappings] resolved',
+        Object.keys(priorMap).length, 'of', labelNorms.length, 'labels from memory',
+        '(exact:', Object.values(priorExact).filter(Boolean).length + ')', { priorMap, clientId, firmId });
+    }
   } catch(e) {
-    console.error('[category_mappings] lookup threw:', e);
-    console.groupEnd();
+    console.warn('[category_mappings] lookup threw:', e);
   }
 
   const headers = rows[0] || [];
@@ -4282,7 +4254,16 @@ window.showCsvReview = async function(rows) {
     const values = r.slice(1);
     const prior = priorMap[norm];
     const cat = prior || _categKeyword(label);
-    return { label, label_normalised: norm, values, category: cat, touched: false, priorCategory: prior || null };
+    return {
+      label, label_normalised: norm, values, category: cat,
+      // Exact memory hits are trusted, so they are NOT flagged as needing
+      // review (no "unconfirmed" highlight) — the whole point of the memory.
+      // Fuzzy hits and keyword guesses stay highlighted so the accountant's
+      // attention is drawn only to the genuinely uncertain rows.
+      touched: priorExact[norm] === true,
+      fromMemory: !!prior,
+      priorCategory: prior || null,
+    };
   });
 
   // Reset checkbox and submit button
@@ -4377,42 +4358,30 @@ window.confirmCsvReview = async function() {
   if (txt) txt.style.opacity = 0;
   if (spin) spin.style.display = 'inline-block';
 
-  const activeItems = _categorisedItems.filter(i => i.category !== 'ignore');
   const clientId = document.getElementById('f-client-id')?.value || null;
-  const now = new Date().toISOString();
+  const firmId = currentUser?.id;
 
-  // Pass 1 — always write firm-wide rows (client_id IS NULL).
-  // Uses the partial index: UNIQUE(firm_id, label_normalised) WHERE client_id IS NULL.
-  // This ensures firm-wide lookups always return results regardless of client selection.
-  const firmWide = activeItems.map(item => ({
-    firm_id: currentUser.id,
-    label_normalised: item.label_normalised,
-    category: item.category,
-    client_id: null,
-    confirmed_count: 1,
-    last_confirmed_at: now,
-  }));
-  if (firmWide.length) {
-    const { error: fwErr } = await sb.from('category_mappings')
-      .upsert(firmWide, { onConflict: 'firm_id,label_normalised' });
-    if (fwErr) console.warn('category_mappings firm-wide upsert failed:', fwErr);
-  }
+  // Persist EVERY category choice — INCLUDING 'ignore' — so the accountant's
+  // decision is remembered next time. (Previously 'ignore' rows were filtered
+  // out before saving, so an item marked Ignore reverted to a keyword guess on
+  // every re-upload.) Only non-ignore items feed the actual report further down.
+  // De-dupe by normalised label in case a CSV repeats a label; last one wins.
+  const catByLabel = new Map();
+  _categorisedItems.forEach(i => {
+    if (i && i.label_normalised) catByLabel.set(i.label_normalised, i.category);
+  });
 
-  // Pass 2 — if a client is selected, also write client-specific rows.
-  // Uses the partial index: UNIQUE(firm_id, client_id, label_normalised) WHERE client_id IS NOT NULL.
-  if (clientId) {
-    const clientSpecific = activeItems.map(item => ({
-      firm_id: currentUser.id,
-      label_normalised: item.label_normalised,
-      category: item.category,
-      client_id: clientId,
-      confirmed_count: 1,
-      last_confirmed_at: now,
-    }));
-    if (clientSpecific.length) {
-      const { error: csErr } = await sb.from('category_mappings')
-        .upsert(clientSpecific, { onConflict: 'firm_id,client_id,label_normalised' });
-      if (csErr) console.warn('category_mappings client-specific upsert failed:', csErr);
+  if (firmId && catByLabel.size) {
+    try {
+      // Firm-wide is always written so a brand-new client still benefits from
+      // the firm's accumulated knowledge on its first upload.
+      await _saveCategoryMappings(firmId, null, catByLabel);
+      // Client-specific is authoritative for this client and always wins on
+      // read, so same-client repeat uploads stay correct even when a different
+      // client later overwrites the firm-wide default for the same label.
+      if (clientId) await _saveCategoryMappings(firmId, clientId, catByLabel);
+    } catch (e) {
+      console.warn('[category_mappings] save failed:', e);
     }
   }
 
@@ -4420,8 +4389,41 @@ window.confirmCsvReview = async function() {
   if (txt) txt.style.opacity = 1;
   if (spin) spin.style.display = 'none';
 
+  const activeItems = _categorisedItems.filter(i => i.category !== 'ignore');
   submitReport(activeItems);
 };
+
+// Upsert a batch of label→category mappings for a firm, either firm-wide
+// (clientId = null, partial index firm_id+label_normalised) or client-specific
+// (partial index firm_id+client_id+label_normalised). Reads the existing
+// confirmed_count first so the counter accumulates across confirmations instead
+// of resetting to 1 every time.
+async function _saveCategoryMappings(firmId, clientId, catByLabel) {
+  const labels = [...catByLabel.keys()];
+  if (!labels.length) return;
+  const now = new Date().toISOString();
+
+  let readQ = sb.from('category_mappings')
+    .select('label_normalised,confirmed_count')
+    .eq('firm_id', firmId)
+    .in('label_normalised', labels);
+  readQ = clientId ? readQ.eq('client_id', clientId) : readQ.is('client_id', null);
+  const { data: existing } = await readQ;
+  const prevCount = {};
+  (existing || []).forEach(r => { prevCount[r.label_normalised] = r.confirmed_count || 0; });
+
+  const rows = labels.map(label => ({
+    firm_id: firmId,
+    client_id: clientId,
+    label_normalised: label,
+    category: catByLabel.get(label),
+    confirmed_count: (prevCount[label] || 0) + 1,
+    last_confirmed_at: now,
+  }));
+  const onConflict = clientId ? 'firm_id,client_id,label_normalised' : 'firm_id,label_normalised';
+  const { error } = await sb.from('category_mappings').upsert(rows, { onConflict });
+  if (error) console.warn(`[category_mappings] ${clientId ? 'client' : 'firm'}-wide upsert failed:`, error);
+}
 
 window.checkCsvSize = function(file, warnId, sizeId) {
   const warn = document.getElementById(warnId);
