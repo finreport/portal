@@ -4106,9 +4106,19 @@ function _fuzzyKey(norm) {
     .trim();
 }
 
+// Revenue-indicating words. If a label contains ANY of these it is income, not
+// an outgoing cost — e.g. "recurring subscription software revenue" must be
+// Revenue even though it also contains the OpEx keywords "software"/"subscription".
+// This priority check runs BEFORE any COGS/OpEx matching so revenue always wins.
+const _CAT_REVENUE_PRIORITY = [
+  'revenue','sales','receipts','income','fees received','earnings',
+];
+
 function _categKeyword(label) {
   if (_isSummaryRow(label)) return 'ignore';
   const l = label.toLowerCase();
+  // Revenue takes absolute priority over expense keywords.
+  if (_CAT_REVENUE_PRIORITY.some(k => l.includes(k))) return 'revenue';
   if (_CAT_KEYWORDS.cogs.some(k => l.includes(k))) return 'cogs';
   if (_CAT_KEYWORDS.opex.some(k => l.includes(k))) return 'opex';
   if (_CAT_EXPENSE_CATCH.some(k => l.includes(k))) return 'opex';
@@ -4154,9 +4164,15 @@ window.showCsvReview = async function(rows) {
     const label = (r[0] || '').trim();
     if (!label) return false;
 
-    // Skip section header rows
+    // Skip section header rows — EXACT match only. A divider row is literally
+    // named "Revenue" / "Operating Expenses"; we must NOT drop a real line item
+    // just because it ends with (or starts with) a section word. The old
+    // endsWith(' '+h) test silently deleted legitimate items such as
+    // "recurring subscription software revenue", "subscription revenue" and
+    // "free cash flow". Header dividers with no numeric values are also caught
+    // by the numeric-cell check further down, so exact match here is safe.
     const labelLow = label.toLowerCase();
-    if (_SECTION_HEADERS.some(h => labelLow === h || labelLow.startsWith(h + ' ') || labelLow.endsWith(' ' + h))) return false;
+    if (_SECTION_HEADERS.some(h => labelLow === h)) return false;
 
     // Skip narrative / paragraph rows: label has > 15 words
     if (label.split(/\s+/).length > 15) return false;
