@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pagevo — Portal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%230E8A7A'/%3E%3Ctext%20x='16'%20y='22'%20font-family='Georgia,serif'%20font-size='15'%20font-weight='bold'%20text-anchor='middle'%20fill='white'%3EPV%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -658,14 +659,25 @@ html.dark .trial-banner-text{color:rgba(255,255,255,.85)}
 .search-input{padding-left:32px!important}
 
 /* ── TOAST ── */
+/* right:90px keeps it clear of the chat FAB (right:24, 54px wide) on desktop */
 .toast{
-  position:fixed;bottom:24px;right:24px;
+  position:fixed;bottom:24px;right:90px;
   background:var(--navy);color:white;border-radius:10px;
   padding:14px 20px;font-size:14px;font-weight:500;
   box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:1000;
   transform:translateY(80px);opacity:0;pointer-events:none;
   transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;
   display:flex;align-items:center;gap:8px;
+}
+@media(max-width:768px){
+  /* sit above the fixed bottom mobile nav */
+  .toast{left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom))}
+}
+
+/* ── KEYBOARD FOCUS ── */
+.nav-item:focus-visible,.mobile-nav-item:focus-visible,.ob-check-item:focus-visible,
+.cat-badge:focus-visible,.upload-area:focus-visible{
+  outline:2px solid var(--teal);outline-offset:2px;
 }
 .toast.show{transform:translateY(0);opacity:1;pointer-events:all}
 .toast.success{background:var(--green)}
@@ -1482,7 +1494,7 @@ html.dark .gen-step.gs-active{color:#e2e8f0}
 /* ── DATE RANGE FILTER ── */
 .reports-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .date-filter-group{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray)}
-.date-filter-input{font-size:12.5px;padding:6px 9px;border:1px solid var(--gray-light);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;min-width:0}
+.date-filter-input{font-size:12.5px;padding:6px 9px;border:1px solid var(--gray-light);border-radius:6px;background:var(--white);color:var(--text);cursor:pointer;min-width:0}
 .date-filter-clear{font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;white-space:nowrap}
 .date-filter-clear:hover{color:var(--navy)}
 
@@ -1672,11 +1684,11 @@ html.dark .manage-sub-text strong{color:white}
     <div class="auth-error" id="auth-error"></div>
     <div id="login-form">
       <div class="field">
-        <label>Email</label>
+        <label for="login-email">Email</label>
         <input type="email" id="login-email" placeholder="you@yourfirm.co.uk" autocomplete="email">
       </div>
       <div class="field">
-        <label>Password</label>
+        <label for="login-password">Password</label>
         <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="btn-auth" onclick="signIn()">
@@ -1687,15 +1699,15 @@ html.dark .manage-sub-text strong{color:white}
     </div>
     <div id="signup-form" style="display:none">
       <div class="field">
-        <label>Firm Name</label>
+        <label for="signup-firm">Firm Name</label>
         <input type="text" id="signup-firm" placeholder="Smith &amp; Co Accountants">
       </div>
       <div class="field">
-        <label>Email</label>
+        <label for="signup-email">Email</label>
         <input type="email" id="signup-email" placeholder="you@yourfirm.co.uk" autocomplete="email">
       </div>
       <div class="field">
-        <label>Password</label>
+        <label for="signup-password">Password</label>
         <input type="password" id="signup-password" placeholder="Min. 8 characters" autocomplete="new-password">
       </div>
       <button class="btn-auth" onclick="signUp()">
@@ -1921,7 +1933,7 @@ html.dark .manage-sub-text strong{color:white}
           <div class="stat-card">
             <div class="stat-label">Reports This Month</div>
             <div class="stat-value" id="stat-month">—</div>
-            <div class="stat-sub">Current billing period</div>
+            <div class="stat-sub">Calendar month</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Total Reports</div>
@@ -1995,9 +2007,14 @@ html.dark .manage-sub-text strong{color:white}
         <div class="card">
           <div class="card-header">
             <span class="card-title">All Reports</span>
-            <div class="search-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input class="form-input search-input" style="width:240px;padding:8px 12px;font-size:13px" placeholder="Search client, period, status…" id="reports-search" oninput="filterReports()">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button class="btn-secondary" style="font-size:13px;padding:8px 14px;white-space:nowrap" onclick="exportReportsCsv()" title="Download the current report list as a CSV file">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
+              </button>
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input class="form-input search-input" style="width:240px;padding:8px 12px;font-size:13px" placeholder="Search client, period, status…" id="reports-search" oninput="filterReports()" aria-label="Search reports">
+              </div>
             </div>
           </div>
           <div class="reports-filters" style="padding:0 20px 12px">
@@ -2161,7 +2178,7 @@ html.dark .manage-sub-text strong{color:white}
               <div class="form-section-title"><div class="dot"></div>Financial Data</div>
               <div class="form-group full" style="margin-bottom:16px">
                 <label class="form-label">P&amp;L CSV File <span>*</span></label>
-                <div class="upload-area" id="upload-area-1" onclick="document.getElementById('csv-file-1').click()" ondragover="handleDrag(event,'upload-area-1')" ondragleave="handleDragLeave('upload-area-1')" ondrop="handleDrop(event,'csv-file-1','upload-area-1','upload-name-1')">
+                <div class="upload-area" id="upload-area-1" role="button" tabindex="0" aria-label="Upload P&amp;L CSV file" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="document.getElementById('csv-file-1').click()" ondragover="handleDrag(event,'upload-area-1')" ondragleave="handleDragLeave('upload-area-1')" ondrop="handleDrop(event,'csv-file-1','upload-area-1','upload-name-1')">
                   <input type="file" id="csv-file-1" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(this,'upload-name-1')">
                   <div class="upload-icon">📊</div>
                   <div class="upload-text"><strong>Click to upload</strong> or drag &amp; drop</div>
@@ -2177,7 +2194,7 @@ html.dark .manage-sub-text strong{color:white}
               </div>
               <div id="second-csv-wrapper" style="display:none" class="form-group full">
                 <label class="form-label">Comparison Period CSV <span>*</span></label>
-                <div class="upload-area" id="upload-area-2" onclick="document.getElementById('csv-file-2').click()" ondragover="handleDrag(event,'upload-area-2')" ondragleave="handleDragLeave('upload-area-2')" ondrop="handleDrop(event,'csv-file-2','upload-area-2','upload-name-2')">
+                <div class="upload-area" id="upload-area-2" role="button" tabindex="0" aria-label="Upload comparison period CSV file" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="document.getElementById('csv-file-2').click()" ondragover="handleDrag(event,'upload-area-2')" ondragleave="handleDragLeave('upload-area-2')" ondrop="handleDrop(event,'csv-file-2','upload-area-2','upload-name-2')">
                   <input type="file" id="csv-file-2" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(this,'upload-name-2')">
                   <div class="upload-icon">📊</div>
                   <div class="upload-text"><strong>Click to upload</strong> or drag &amp; drop</div>
@@ -2491,7 +2508,7 @@ html.dark .manage-sub-text strong{color:white}
               <li class="plan-feature-item"><span class="plan-feature-check">✓</span>UK GDPR compliant</li>
               <li class="plan-feature-item"><span class="plan-feature-check">✓</span>Pagevo branding on reports</li>
             </ul>
-            <a id="upg-std-cta" href="https://buy.stripe.com/7sY4gr24W8pEgYRdTLes001" target="_blank" class="plan-cta plan-cta-standard">Get Started →</a>
+            <a id="upg-std-cta" href="https://buy.stripe.com/7sY4gr24W8pEgYRdTLes001" target="_blank" rel="noopener" class="plan-cta plan-cta-standard">Get Started →</a>
           </div>
 
           <!-- White Label -->
@@ -2514,7 +2531,7 @@ html.dark .manage-sub-text strong{color:white}
               <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Analytics dashboard</li>
               <li class="plan-feature-item"><span class="plan-feature-check plan-feature-check-gold">✓</span>Zero Pagevo branding</li>
             </ul>
-            <a id="upg-wl-cta" href="https://buy.stripe.com/6oU5kvbFwbBQ9wpbLDes002" target="_blank" class="plan-cta plan-cta-wl">Get Started →</a>
+            <a id="upg-wl-cta" href="https://buy.stripe.com/6oU5kvbFwbBQ9wpbLDes002" target="_blank" rel="noopener" class="plan-cta plan-cta-wl">Get Started →</a>
           </div>
         </div>
 
@@ -2524,7 +2541,7 @@ html.dark .manage-sub-text strong{color:white}
 
         <div class="manage-sub">
           <div class="manage-sub-text"><strong>Already subscribed?</strong> Manage your billing, change plan, or cancel your subscription.</div>
-          <a href="https://billing.stripe.com/p/login/5kQ7sDaBs8pE381bLDes000" target="_blank" class="btn-secondary">Manage subscription →</a>
+          <a href="https://billing.stripe.com/p/login/5kQ7sDaBs8pE381bLDes000" target="_blank" rel="noopener" class="btn-secondary">Manage subscription →</a>
         </div>
       </div>
 
@@ -2628,7 +2645,7 @@ html.dark .manage-sub-text strong{color:white}
 </div>
 
 <!-- Toast -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ══ AI CHAT WIDGET ══ -->
 <button class="chat-trigger" id="chat-trigger" onclick="toggleChat()" aria-label="AI Assistant (Beta)" style="display:none">
@@ -2699,9 +2716,29 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('f-report-type').addEventListener('change', e => {
     document.getElementById('second-csv-wrapper').style.display =
       e.target.value === 'comparison' ? 'block' : 'none';
+    updateSubmitBlocked();
   });
 
-  document.getElementById('f-client-name')?.addEventListener('input', updateFormProgress);
+  // Enter submits the auth forms
+  ['login-email','login-password'].forEach(id =>
+    document.getElementById(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); }));
+  ['signup-firm','signup-email','signup-password'].forEach(id =>
+    document.getElementById(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') signUp(); }));
+
+  // A manual edit to the delivery email clears the auto-filled flag, so
+  // switching clients no longer overwrites an address the user typed.
+  const delEmail = document.getElementById('f-delivery-email');
+  delEmail?.addEventListener('input', () => { delEmail.dataset.auto = ''; });
+
+  // Keyboard access for div-based nav items and checklist rows
+  document.querySelectorAll('.nav-item,.mobile-nav-item,.ob-check-item').forEach(el => {
+    if (el.getAttribute('onclick')) { el.setAttribute('tabindex','0'); el.setAttribute('role','button'); }
+  });
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target?.matches?.('.nav-item,.mobile-nav-item,.ob-check-item')) {
+      e.preventDefault(); e.target.click();
+    }
+  });
 
   // Close bell on outside click
   document.addEventListener('click', e => {
@@ -2759,7 +2796,9 @@ window.signUp = async function() {
   }
 
   setAuthLoading(true, 'signup');
-  const { data, error } = await sb.auth.signUp({ email, password });
+  // Firm name is stored in auth metadata so loadFirm can self-heal the firms
+  // row if this pre-confirmation insert is rejected by RLS.
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { firm_name: firm } } });
   if (error) { setAuthLoading(false, 'signup'); showAuthError(error.message); return; }
   if (data.user) {
     await sb.from('firms').insert({ id: data.user.id, email, firm_name: firm, plan: 'standard', active: false });
@@ -2784,8 +2823,18 @@ window.setAuthLoading = function(loading, form) {
 
 // ── FIRM DATA ─────────────────────────────────────────────────────────────
 window.loadFirm = async function() {
-  const { data } = await sb.from('firms').select('*').eq('id', currentUser.id).single();
+  const { data, error } = await sb.from('firms').select('*').eq('id', currentUser.id).single();
   currentFirm = data;
+  // Self-heal a missing firms row (signup insert can fail before email
+  // confirmation). Without a row this account would otherwise be treated as
+  // an active paid firm — the trial gate only fires on active === false.
+  if (!currentFirm && error?.code === 'PGRST116') {
+    const metaName = currentUser.user_metadata?.firm_name || '';
+    const { data: created } = await sb.from('firms')
+      .insert({ id: currentUser.id, email: currentUser.email, firm_name: metaName, plan: 'standard', active: false })
+      .select().single();
+    currentFirm = created || { id: currentUser.id, email: currentUser.email, firm_name: metaName, plan: 'standard', active: false };
+  }
   document.getElementById('pending-screen').classList.remove('show');
 
   if (currentFirm) {
@@ -2836,16 +2885,19 @@ window.loadFirm = async function() {
 // ── LOAD REPORTS ──────────────────────────────────────────────────────────
 window.loadReports = async function() {
   showSkeletons();
-  const { data } = await sb.from('reports')
+  const { data, error } = await sb.from('reports')
     .select('*')
     .eq('firm_id', currentUser.id)
     .order('created_at', { ascending: false });
-  allReports = data || [];
+  if (error) {
+    // Keep whatever we already have rather than flashing a false empty state
+    showToast('Could not refresh reports — check your connection.', 'error');
+  } else {
+    allReports = data || [];
+  }
   renderDashboardStats();
   renderReports();
   checkOnboarding();
-  updateClientAutocomplete();
-  updateRecentPills();
 };
 
 // ── REALTIME ──────────────────────────────────────────────────────────────
@@ -2858,7 +2910,7 @@ window.setupRealtime = function() {
     }, payload => {
       const { eventType, new: n, old: o } = payload;
       if (eventType === 'INSERT') {
-        allReports.unshift(n);
+        if (!allReports.some(r => r.id === n.id)) allReports.unshift(n);
       } else if (eventType === 'UPDATE') {
         const idx = allReports.findIndex(r => r.id === n.id);
         if (idx !== -1) {
@@ -2940,7 +2992,7 @@ window.renderDashboardStats = function() {
     document.getElementById('stat-latest').textContent = latest.client_name;
     document.getElementById('stat-latest-sub').textContent = formatDate(latest.created_at);
   } else {
-    document.getElementById('stat-latest').textContent = '0';
+    document.getElementById('stat-latest').textContent = '—';
     document.getElementById('stat-latest-sub').textContent = 'No reports yet';
   }
 
@@ -2952,7 +3004,7 @@ window.renderDashboardStats = function() {
     document.getElementById('stat-top-client-sub').textContent =
       topCount + ' report' + (topCount !== 1 ? 's' : '');
   } else {
-    document.getElementById('stat-top-client').textContent = '0';
+    document.getElementById('stat-top-client').textContent = '—';
     document.getElementById('stat-top-client-sub').textContent = 'No reports yet';
   }
 
@@ -3028,14 +3080,14 @@ window.buildDashEmptyHtml = function() {
 };
 
 // ── RENDER REPORTS ────────────────────────────────────────────────────────
-window.renderReports = function() {
+// Shared by the table render and the CSV export so both always agree on
+// what "the current list" is (search + date range + sort applied).
+window._getFilteredReports = function() {
   let filtered = [...allReports];
   const q = (document.getElementById('reports-search')?.value || '').toLowerCase().trim();
   if (q) {
-    const isStatusQuery = ['delivered','processing','in progress','complete'].some(s => s.includes(q) || q.includes(s));
     filtered = filtered.filter(r => {
-      const delivered = isDelivered(r);
-      const statusStr = delivered ? 'delivered' : 'processing';
+      const statusStr = isDelivered(r) ? 'delivered' : 'processing';
       return (
         r.client_name?.toLowerCase().includes(q) ||
         r.period?.toLowerCase().includes(q) ||
@@ -3045,21 +3097,48 @@ window.renderReports = function() {
       );
     });
   }
-  // Date range filter
   const fromVal = document.getElementById('reports-date-from')?.value;
   const toVal   = document.getElementById('reports-date-to')?.value;
   if (fromVal) filtered = filtered.filter(r => r.created_at >= fromVal);
   if (toVal)   filtered = filtered.filter(r => r.created_at.slice(0,10) <= toVal);
-  const hasDate = fromVal || toVal;
-  document.getElementById('date-filter-clear')?.style.setProperty('display', hasDate ? '' : 'none');
   filtered.sort((a, b) => {
     let av = a[sortField] || '', bv = b[sortField] || '';
     return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
   });
+  return filtered;
+};
+
+window.renderReports = function() {
+  const fromVal = document.getElementById('reports-date-from')?.value;
+  const toVal   = document.getElementById('reports-date-to')?.value;
+  document.getElementById('date-filter-clear')?.style.setProperty('display', (fromVal || toVal) ? '' : 'none');
+  const filtered = _getFilteredReports();
   renderReportRows('all-reports-body', filtered, true);
   renderReportCards(filtered);
   updateSortHeaders();
   requestAnimationFrame(setupAllSwipe);
+};
+
+window.exportReportsCsv = function() {
+  const list = _getFilteredReports();
+  if (!list.length) { showToast('No reports to export.', ''); return; }
+  const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const lines = [['Client','Period','Type','Generated','Status','PDF URL'].map(esc).join(',')];
+  list.forEach(r => lines.push([
+    r.client_name,
+    r.period || '',
+    r.report_type === 'comparison' ? 'Comparison' : 'Standard',
+    formatDate(r.created_at),
+    isDelivered(r) ? 'Delivered' : 'Processing',
+    r.pdf_url || '',
+  ].map(esc).join(',')));
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pagevo_reports_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showToast('Report list exported.', 'success');
 };
 
 // ── RENDER ROWS ───────────────────────────────────────────────────────────
@@ -3133,28 +3212,28 @@ window.renderReportRows = function(tbodyId, reports, showType) {
       ? `<td class="col-type"><span class="badge ${r.report_type==='comparison'?'badge-amber':'badge-green'}">${r.report_type==='comparison'?'Comparison':'Standard'}</span></td>`
       : '';
     const dlReveal = r.pdf_url
-      ? `<div class="swipe-dl-reveal"><button onclick="event.stopPropagation();downloadReport('${r.pdf_url}','${escHtml(r.client_name)}')">
+      ? `<div class="swipe-dl-reveal"><button onclick="event.stopPropagation();downloadReport('${jsArg(r.pdf_url)}','${jsArg(r.client_name)}')" aria-label="Download PDF">
            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
            PDF</button></div>` : '';
     const dlBtn = r.pdf_url
-      ? `<button class="btn-download" onclick="event.stopPropagation();downloadReport('${r.pdf_url}','${escHtml(r.client_name)}')">
+      ? `<button class="btn-download" onclick="event.stopPropagation();downloadReport('${jsArg(r.pdf_url)}','${jsArg(r.client_name)}')">
            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
            PDF
          </button>`
       : `<span style="font-size:12px;color:var(--gray)">${delivered?'Email sent':'In progress…'}</span>`;
     const regenBtn = (isAllReports && delivered)
-      ? `<button class="btn-regen" onclick="event.stopPropagation();regenReport('${r.id}','${escHtml(r.client_name)}')">↺ Regen</button>`
+      ? `<button class="btn-regen" onclick="event.stopPropagation();regenReport('${jsArg(r.id)}','${jsArg(r.client_name)}')">↺ Regen</button>`
       : '';
     const swipeAttr = isAllReports ? ' data-sw="1"' : '';
     const dlCellClass = isAllReports ? ' class="swipe-dl-cell"' : '';
-    return `<tr onclick="openReportPanel('${r.id}')"${swipeAttr}>
+    return `<tr onclick="openReportPanel('${jsArg(r.id)}')"${swipeAttr}>
       <td style="font-weight:500">${escHtml(r.client_name)}</td>
-      <td style="color:var(--gray)">${r.period||'—'}</td>
+      <td style="color:var(--gray)">${escHtml(r.period||'—')}</td>
       ${typeHtml}
       <td class="col-generated" style="color:var(--gray)">${formatDate(r.created_at)}</td>
       <td>${badgeHtml}</td>
       <td${dlCellClass}>${dlBtn}${regenBtn}${isAllReports ? dlReveal : ''}
-        ${isAllReports ? `<button class="btn-issue" onclick="event.stopPropagation();reportIssue('${r.id}','${escHtml(r.client_name)}','${escHtml(r.period||'')}')">Report issue</button>` : ''}
+        ${isAllReports ? `<button class="btn-issue" onclick="event.stopPropagation();reportIssue('${jsArg(r.id)}','${jsArg(r.client_name)}','${jsArg(r.period||'')}')">Report issue</button>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -3212,19 +3291,19 @@ window.renderReportCards = function(reports) {
       ? '<span class="badge badge-green">Delivered</span>'
       : '<span class="badge badge-amber">Processing</span>') + verifiedBadge;
     const dlBtn = r.pdf_url
-      ? `<button class="btn-download" onclick="event.stopPropagation();downloadReport('${r.pdf_url}','${escHtml(r.client_name)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>`
+      ? `<button class="btn-download" onclick="event.stopPropagation();downloadReport('${jsArg(r.pdf_url)}','${jsArg(r.client_name)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>`
       : `<span style="font-size:12px;color:var(--gray)">${delivered?'Email sent':'In progress…'}</span>`;
-    return `<div class="report-card" onclick="openReportPanel('${r.id}')">
+    return `<div class="report-card" onclick="openReportPanel('${jsArg(r.id)}')">
       <div class="report-card-head">
         <div class="report-card-name">${escHtml(r.client_name)}</div>
         ${badge}
       </div>
-      <div class="report-card-meta">${r.period||'—'} · ${r.report_type==='comparison'?'Comparison':'Standard'}</div>
+      <div class="report-card-meta">${escHtml(r.period||'—')} · ${r.report_type==='comparison'?'Comparison':'Standard'}</div>
       ${delayMsg}
       <div class="report-card-foot">
         <span class="report-card-date">${formatDate(r.created_at)}</span>
         ${dlBtn}
-        <button class="btn-issue" onclick="event.stopPropagation();reportIssue('${r.id}','${escHtml(r.client_name)}','${escHtml(r.period||'')}')">Report issue</button>
+        <button class="btn-issue" onclick="event.stopPropagation();reportIssue('${jsArg(r.id)}','${jsArg(r.client_name)}','${jsArg(r.period||'')}')">Report issue</button>
       </div>
     </div>`;
   }).join('');
@@ -3399,14 +3478,22 @@ window.dismissUpgrade = function() {
 };
 
 // ── SUBMIT REPORT ─────────────────────────────────────────────────────────
+// Returns true when the report was submitted, false on any validation stop or
+// error, so callers (confirmCsvReview, Enter shortcut) can react correctly.
+// _submitLock prevents concurrent double-submission — the trial gate and file
+// read are async, so without it a rapid double-click fired the webhook twice.
+let _submitLock = false;
 window.submitReport = async function(categorisedItems) {
+  if (_submitLock) return false;
+  _submitLock = true;
+  try {
   // ── Trial gate ────────────────────────────────────────────────────────
   if (currentFirm?.active === false) {
-    if (allReports.length >= 1) { showPaywall('used'); return; }
+    if (allReports.length >= 1) { showPaywall('used'); return false; }
     const fp = await generateBrowserFingerprint();
     const ip = await getClientIP();
     const isFraud = await checkTrialFraud(fp, ip);
-    if (isFraud) { showPaywall('fraud'); return; }
+    if (isFraud) { showPaywall('fraud'); return false; }
   }
   // ─────────────────────────────────────────────────────────────────────
 
@@ -3417,7 +3504,7 @@ window.submitReport = async function(categorisedItems) {
   let clientId = document.getElementById('f-client-id')?.value || null;
   if (selVal === '__new__') {
     const newName = document.getElementById('f-client-name-new')?.value.trim();
-    if (!newName) { showToast('Please enter the new client name.', 'error'); return; }
+    if (!newName) { showToast('Please enter the new client name.', 'error'); return false; }
     // Create client record inline if not already done
     try {
       const newEmail = document.getElementById('f-client-email-new')?.value.trim() || null;
@@ -3425,7 +3512,14 @@ window.submitReport = async function(categorisedItems) {
       const { data: newClient } = await sb.from('clients').insert({
         firm_id: currentUser.id, client_name: newName, client_email: newEmail, industry: newInd
       }).select().single();
-      if (newClient) { clientName = newClient.client_name; clientId = newClient.id; allClients.push(newClient); populateClientDropdown(); }
+      if (newClient) {
+        clientName = newClient.client_name; clientId = newClient.id;
+        allClients.push(newClient); populateClientDropdown();
+        // Write the id back so callers (confirmCsvReview) can see which client
+        // this submission was ultimately attached to.
+        const idHidden = document.getElementById('f-client-id');
+        if (idHidden) idHidden.value = newClient.id;
+      }
       else clientName = newName;
     } catch(e) { clientName = newName; }
   } else if (selVal && selVal !== '') {
@@ -3436,10 +3530,10 @@ window.submitReport = async function(categorisedItems) {
   const csvFile = document.getElementById('csv-file-1').files[0];
   const reportType = document.getElementById('f-report-type').value;
 
-  if (!clientName) { showToast('Please select or enter a client name.', 'error'); return; }
-  if (!csvFile)    { showToast('Please upload a CSV file.', 'error'); return; }
+  if (!clientName) { showToast('Please select or enter a client name.', 'error'); return false; }
+  if (!csvFile)    { showToast('Please upload a CSV file.', 'error'); return false; }
   if (reportType === 'comparison' && !document.getElementById('csv-file-2').files[0]) {
-    showToast('Please upload the comparison period CSV.', 'error'); return;
+    showToast('Please upload the comparison period CSV.', 'error'); return false;
   }
 
   setSubmitLoading(true);
@@ -3517,25 +3611,8 @@ window.submitReport = async function(categorisedItems) {
       `Usually ready within <strong>2 minutes</strong><br>We'll email <strong>${escHtml(currentUser.email||'you')}</strong> when it's ready.`;
     startCountdown(clientName, _submittedAt);
 
-    setTimeout(() => {
-      document.getElementById('f-client-name').value = '';
-      const f1 = document.getElementById('csv-file-1');
-      f1.value = ''; if (f1.value) { f1.type = 'text'; f1.type = 'file'; }
-      const f2 = document.getElementById('csv-file-2');
-      f2.value = ''; if (f2.value) { f2.type = 'text'; f2.type = 'file'; }
-      document.getElementById('upload-name-1').style.display = 'none';
-      document.getElementById('upload-name-2').style.display = 'none';
-      document.getElementById('f-context').value = '';
-      document.getElementById('f-notes').value = '';
-      document.getElementById('submit-status').className = 'submit-status';
-      document.getElementById('submit-status').textContent = '';
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('submit-text').style.opacity = 1;
-      document.getElementById('submit-spinner').style.display = 'none';
-      document.getElementById('csv-review-panel').classList.remove('show');
-      document.getElementById('form-submit-row').style.display = '';
-      _categorisedItems = [];
-    }, 3000);
+    setTimeout(resetSubmitForm, 3000);
+    return true;
 
   } catch (err) {
     stopGenProgress();
@@ -3545,7 +3622,57 @@ window.submitReport = async function(categorisedItems) {
       'Something went wrong generating this report. We\'ve been notified and will look into it — please try again in a few minutes.' +
       ' <button class="btn-secondary" style="font-size:12.5px;padding:5px 12px;margin-left:8px" onclick="document.getElementById(\'submit-status\').className=\'submit-status\'">Try Again</button>';
     console.error(err);
+    return false;
   }
+  } finally {
+    _submitLock = false;
+  }
+};
+
+// Full form reset after a successful submission — clears everything the old
+// partial reset missed (client selection, validation banners, previews, the
+// review confirmation gate) so the next report starts from a genuinely clean
+// slate. The countdown/progress card below the form is left untouched.
+window.resetSubmitForm = function() {
+  const sel = document.getElementById('f-client-select');
+  if (sel) sel.value = '';
+  ['f-client-name','f-client-id','f-client-name-new','f-client-email-new','f-client-industry-new',
+   'f-context','f-notes','f-client-logo','f-client-accent',
+   'f-cash-op','f-cash-inv','f-cash-fin','f-assets','f-curr-assets','f-liab','f-curr-liab','f-equity']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const newWrap = document.getElementById('f-client-new-wrap');
+  if (newWrap) newWrap.style.display = 'none';
+  const emailEl = document.getElementById('f-delivery-email');
+  if (emailEl) { emailEl.value = ''; emailEl.dataset.auto = ''; }
+  [1,2].forEach(slot => {
+    const f = document.getElementById('csv-file-' + slot);
+    if (f) { f.value = ''; if (f.value) { f.type = 'text'; f.type = 'file'; } }
+    const nm = document.getElementById('upload-name-' + slot);
+    if (nm) nm.style.display = 'none';
+    const val = document.getElementById('csv-validation-' + slot);
+    if (val) { val.className = 'csv-validation'; val.innerHTML = ''; }
+    const prev = document.getElementById('csv-preview-wrap-' + slot);
+    if (prev) { prev.innerHTML = ''; prev.classList.remove('show'); }
+    document.getElementById('file-size-warn-' + slot)?.classList.remove('show');
+  });
+  document.getElementById('submit-status').className = 'submit-status';
+  document.getElementById('submit-status').textContent = '';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-text').style.opacity = 1;
+  document.getElementById('submit-spinner').style.display = 'none';
+  document.getElementById('csv-review-panel').classList.remove('show');
+  document.getElementById('form-submit-row').style.display = '';
+  const totals = document.getElementById('csv-review-totals');
+  if (totals) totals.style.display = 'none';
+  const cb = document.getElementById('csv-review-confirm-cb');
+  if (cb) cb.checked = false;
+  const rbtn = document.getElementById('csv-review-submit-btn');
+  if (rbtn) rbtn.disabled = true;
+  _categorisedItems = [];
+  _csvValid = {};
+  updateSubmitBlocked();
+  updateFormProgress();
+  updateContextCounter();
 };
 
 window.setSubmitLoading = function(loading) {
@@ -3654,7 +3781,6 @@ window.populateSettings = function() {
   if (currentFirm.logo_url) previewLogo();
   const dnEl = document.getElementById('s-default-notes');
   if (dnEl) dnEl.value = currentFirm.default_notes || '';
-  renderBillingCard();
   updateProfileCompleteness();
 };
 
@@ -3669,6 +3795,13 @@ window.saveSettings = async function() {
     disclaimer:     document.getElementById('s-disclaimer').value.trim(),
     default_notes:  document.getElementById('s-default-notes')?.value.trim() || '',
   };
+  // Colours feed straight into the PDF renderer — reject anything that isn't
+  // a 6-digit hex value before it reaches the database.
+  const okHex = v => !v || /^#[0-9A-Fa-f]{6}$/.test(v);
+  if (!okHex(updates.primary_colour) || !okHex(updates.accent_colour)) {
+    showToast('Colours must be 6-digit hex values like #0E8A7A.', 'error');
+    return;
+  }
   const { error } = await sb.from('firms').update(updates).eq('id', currentUser.id);
   if (error) { showToast('Failed to save settings.', 'error'); return; }
   currentFirm = { ...currentFirm, ...updates };
@@ -3676,34 +3809,6 @@ window.saveSettings = async function() {
   document.getElementById('sidebar-avatar').textContent = (updates.firm_name || 'F')[0].toUpperCase();
   updateProfileCompleteness();
   showToast('Settings saved.', 'success');
-};
-
-window.renderBillingCard = function() {
-  const el = document.getElementById('billing-card-body');
-  if (!el || !currentFirm) return;
-  const plan = currentFirm.plan;
-  const isWL = plan === 'white_label' || plan === 'white_label_pro';
-  const planName = isWL ? (plan === 'white_label_pro' ? 'White Label Pro' : 'White Label') : 'Standard';
-  el.innerHTML = `
-    <div style="margin-bottom:16px">
-      <div style="font-size:13px;color:var(--gray)">Current plan: <strong style="color:var(--text)">${planName}</strong></div>
-      <div style="font-size:12.5px;color:var(--gray);margin-top:4px">To change your plan, email <a href="mailto:reports@pagevo.co.uk" style="color:var(--teal)">reports@pagevo.co.uk</a> or upgrade below.</div>
-    </div>
-    <div class="billing-plan-row">
-      <div>
-        <div class="billing-plan-name">Standard</div>
-        <div class="billing-plan-price">&pound;299 / month &middot; Unlimited reports</div>
-      </div>
-      ${!isWL ? '<span class="billing-plan-badge">Current plan</span>' : '<a class="btn-billing-upgrade" href="https://buy.stripe.com/7sY4gr24W8pEgYRdTLes001" target="_blank" rel="noopener">Upgrade &rarr;</a>'}
-    </div>
-    <div class="billing-plan-row">
-      <div>
-        <div class="billing-plan-name">White Label</div>
-        <div class="billing-plan-price">&pound;499 / month &middot; Full branding &amp; analytics</div>
-      </div>
-      ${isWL ? '<span class="billing-plan-badge">Current plan</span>' : '<a class="btn-billing-upgrade" href="https://buy.stripe.com/6oU5kvbFwbBQ9wpbLDes002" target="_blank" rel="noopener">Upgrade &rarr;</a>'}
-    </div>
-  `;
 };
 
 window.regenReport = async function(reportId, clientName) {
@@ -3723,77 +3828,10 @@ window.regenReport = async function(reportId, clientName) {
   showToast('Report resubmitted — you\'ll receive it by email within 15 minutes.', 'success');
 };
 
-window.renderClientsPage = function() {
-  const tbody = document.getElementById('clients-body');
-  if (!tbody) return;
-  if (!allReports.length) {
-    tbody.innerHTML = `<tr><td colspan="5">
-      <div class="empty-state">
-        <h3 class="empty-title">No clients yet</h3>
-        <p class="empty-sub">Generate a report to see your clients listed here.</p>
-        <button class="empty-cta" onclick="showPage('submit')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Generate first report
-        </button>
-      </div>
-    </td></tr>`;
-    return;
-  }
-  const map = {};
-  allReports.forEach(r => {
-    if (!map[r.client_name]) {
-      map[r.client_name] = { count: 0, lastDate: r.created_at, lastPeriod: r.period, lastReport: r };
-    }
-    map[r.client_name].count++;
-    if (new Date(r.created_at) > new Date(map[r.client_name].lastDate)) {
-      map[r.client_name].lastDate = r.created_at;
-      map[r.client_name].lastPeriod = r.period;
-      map[r.client_name].lastReport = r;
-    }
-  });
-  const clients = Object.entries(map).sort((a,b) => new Date(b[1].lastDate) - new Date(a[1].lastDate));
-  tbody.innerHTML = clients.map(([name, info]) => {
-    const delivered = isDelivered(info.lastReport);
-    const badge = delivered
-      ? '<span class="badge badge-green">Delivered</span>'
-      : '<span class="badge badge-amber">Processing</span>';
-    return `<tr style="cursor:pointer" onclick="filterToClient('${escHtml(name)}')">
-      <td style="font-weight:500">${escHtml(name)}</td>
-      <td>${info.count}</td>
-      <td style="color:var(--gray)">${formatDate(info.lastDate)}</td>
-      <td style="color:var(--gray)">${info.lastPeriod || '—'}</td>
-      <td>${badge}</td>
-    </tr>`;
-  }).join('');
-};
-
 window.filterToClient = function(clientName) {
   showPage('reports');
   const searchEl = document.getElementById('reports-search');
   if (searchEl) { searchEl.value = clientName; filterReports(); }
-};
-
-window.updateRecentPills = function() {
-  const wrap = document.getElementById('recent-pills-wrap');
-  const container = document.getElementById('recent-pills');
-  if (!wrap || !container) return;
-  if (!allReports.length) { wrap.style.display = 'none'; return; }
-  const seen = new Set();
-  const recent = [];
-  for (const r of allReports) {
-    if (!seen.has(r.client_name)) { seen.add(r.client_name); recent.push(r.client_name); }
-    if (recent.length >= 5) break;
-  }
-  if (!recent.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = '';
-  container.innerHTML = recent.map(name =>
-    `<button class="recent-pill" type="button" onclick="selectRecentClient('${escHtml(name)}')">${escHtml(name)}</button>`
-  ).join('');
-};
-
-window.selectRecentClient = function(name) {
-  const el = document.getElementById('f-client-name');
-  if (el) { el.value = name; el.dispatchEvent(new Event('input')); }
 };
 
 window.renderAnalyticsPage = function() {
@@ -3818,10 +3856,13 @@ window.renderAnalyticsPage = function() {
     const [yr, mo] = busiestEntry[0].split('-');
     busiestMonth = new Date(yr, mo-1).toLocaleString('default', {month:'short', year:'numeric'});
   }
+  const deliveredPct = allReports.length
+    ? Math.round(allReports.filter(isDelivered).length / allReports.length * 100) + '%'
+    : '—';
   statsGrid.innerHTML = [
     {label:'Total Reports', value: allReports.length},
     {label:'This Month', value: thisMonth},
-    {label:'Avg Health Score', value:'N/A'},
+    {label:'Delivered Rate', value: deliveredPct},
     {label:'Top Client', value: allReports.length ? topClient : '—'},
     {label:'Busiest Month', value: busiestMonth},
   ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value sm">${escHtml(String(s.value))}</div></div>`).join('');
@@ -3836,25 +3877,20 @@ window.renderAnalyticsPage = function() {
   const barW = 52, gap = 16, padL = 8, padB = 32, padT = 24, chartH = 160;
   const totalW = padL + 6*(barW+gap) - gap;
   const H = chartH + padB + padT;
+  // CSS var() is not valid in SVG *presentation attributes* (fill="var(…)"
+  // renders black) — it only works via the style attribute, which is CSS.
   const bars = months.map((m, i) => {
     const x = padL + i * (barW + gap);
     const bh = Math.max((m.count / maxCount) * chartH, m.count > 0 ? 4 : 0);
     const y = padT + chartH - bh;
-    return `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="4" fill="var(--teal)" fill-opacity=".75"/>
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="4" style="fill:var(--teal);fill-opacity:.75"/>
       ${m.count > 0 ? `<text x="${x+barW/2}" y="${y-6}" class="analytics-bar-val">${m.count}</text>` : ''}
       <text x="${x+barW/2}" y="${H-8}" class="analytics-bar-label">${m.label}</text>`;
   }).join('');
-  chartWrap.innerHTML = `<svg viewBox="0 0 ${totalW} ${H}" class="analytics-bar-chart" style="width:100%;max-height:220px">
-    <line x1="0" y1="${padT+chartH}" x2="${totalW}" y2="${padT+chartH}" stroke="var(--gray-light)" stroke-width="1.5"/>
+  chartWrap.innerHTML = `<svg viewBox="0 0 ${totalW} ${H}" class="analytics-bar-chart" style="width:100%;max-height:220px" role="img" aria-label="Reports per month, last 6 months">
+    <line x1="0" y1="${padT+chartH}" x2="${totalW}" y2="${padT+chartH}" style="stroke:var(--gray-light);stroke-width:1.5"/>
     ${bars}
   </svg>`;
-};
-
-window.previewColour = function(inputId, swatchId) {
-  const val = document.getElementById(inputId).value.trim();
-  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-    document.getElementById(swatchId).style.background = val;
-  }
 };
 
 window.previewLogo = function() {
@@ -3927,6 +3963,15 @@ window.validateCsvFile = async function(file, slot) {
         if (wrap) wrap.innerHTML = '<p style="color:var(--gray);font-size:13px;margin:8px 0 0">Excel file — line-item categorisation is not available for Excel uploads.</p>';
         const countEl = document.getElementById('csv-review-count');
         if (countEl) countEl.textContent = '';
+        // Reset the confirmation gate — without this, the Confirm button kept
+        // whatever state it had (enabled on a fresh page load), letting an
+        // Excel upload skip the "I have reviewed" checkbox entirely.
+        const cb = document.getElementById('csv-review-confirm-cb');
+        if (cb) cb.checked = false;
+        const sbtn = document.getElementById('csv-review-submit-btn');
+        if (sbtn) sbtn.disabled = true;
+        const totals = document.getElementById('csv-review-totals');
+        if (totals) totals.style.display = 'none';
         document.getElementById('csv-review-panel').classList.add('show');
         document.getElementById('form-submit-row').style.display = 'none';
         document.getElementById('csv-submit-block').style.display = 'none';
@@ -4317,7 +4362,7 @@ function _renderReviewTable(periodHeaders) {
     return `<tr id="review-row-${idx}"${rowClass ? ` class="${rowClass.trim()}"` : ''}>
       <td><div class="csv-review-row-label" title="${escHtml(item.label)}">${escHtml(item.label)}</div></td>
       ${valTds}
-      <td><span class="cat-badge ${item.category}"${tip} onclick="cycleCatBadge(${idx},this)">${icon} ${_CAT_LABEL[item.category] || item.category}</span></td>
+      <td><span class="cat-badge ${item.category}"${tip} role="button" tabindex="0" aria-label="Category for ${escHtml(item.label)}: ${_CAT_LABEL[item.category] || item.category}. Press to change." onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cycleCatBadge(${idx},this)}" onclick="cycleCatBadge(${idx},this)">${icon} ${_CAT_LABEL[item.category] || item.category}</span></td>
     </tr>`;
   }).join('');
 
@@ -4345,6 +4390,7 @@ window.cycleCatBadge = function(idx, el) {
   _categorisedItems[idx].touched = true;
   el.className = 'cat-badge ' + next;
   el.textContent = (_CAT_ICON[next] || '') + ' ' + (_CAT_LABEL[next] || next);
+  el.setAttribute('aria-label', `Category for ${_categorisedItems[idx].label}: ${_CAT_LABEL[next] || next}. Press to change.`);
   const row = document.getElementById('review-row-' + idx);
   if (row) row.classList.remove('row-unconfirmed');
   _updateReviewCount();
@@ -4401,12 +4447,27 @@ window.confirmCsvReview = async function() {
     }
   }
 
-  if (btn) btn.disabled = false;
+  const activeItems = _categorisedItems.filter(i => i.category !== 'ignore');
+  // Await the submission so the Confirm button stays disabled the whole time —
+  // re-enabling before submitReport finished allowed a double-click to fire
+  // the webhook twice and generate duplicate reports.
+  const ok = await submitReport(activeItems);
+
+  // A brand-new client only gets its id during submitReport (the record is
+  // created there), so the client-specific mapping pass above was skipped for
+  // first uploads. Pick the id up now and backfill so the new client's memory
+  // is client-specific from day one.
+  const finalClientId = document.getElementById('f-client-id')?.value || null;
+  if (ok && firmId && finalClientId && finalClientId !== clientId && catByLabel.size) {
+    try { await _saveCategoryMappings(firmId, finalClientId, catByLabel); }
+    catch (e) { console.warn('[category_mappings] new-client save failed:', e); }
+  }
+
   if (txt) txt.style.opacity = 1;
   if (spin) spin.style.display = 'none';
-
-  const activeItems = _categorisedItems.filter(i => i.category !== 'ignore');
-  submitReport(activeItems);
+  // Only re-enable on failure (validation error the user can fix). On success
+  // the panel resets ~3s later, which restores the disabled/unchecked state.
+  if (btn && !ok) btn.disabled = false;
 };
 
 // Upsert a batch of label→category mappings for a firm, either firm-wide
@@ -4504,19 +4565,37 @@ window.onClientSelect = function(sel) {
   const nameHidden = document.getElementById('f-client-name');
   const idHidden = document.getElementById('f-client-id');
   const emailEl = document.getElementById('f-delivery-email');
+  // Only replace the delivery email if we auto-filled it ourselves (or it's
+  // empty) — never clobber an address the accountant typed manually.
+  const wasAuto = emailEl?.dataset.auto === '1';
   if (val === '__new__') {
     if (newWrap) newWrap.style.display = 'block';
     if (nameHidden) nameHidden.value = '';
     if (idHidden) idHidden.value = '';
+    if (emailEl && wasAuto) { emailEl.value = ''; emailEl.dataset.auto = ''; }
     if (emailEl && !emailEl.value) emailEl.placeholder = 'client@example.com';
+  } else if (!val) {
+    // Placeholder "Select a client…" — clear everything. (Previously the
+    // placeholder's label text was written into the hidden name field, so a
+    // report could be submitted for a client literally called
+    // "Select a client…".)
+    if (newWrap) newWrap.style.display = 'none';
+    if (nameHidden) nameHidden.value = '';
+    if (idHidden) idHidden.value = '';
+    if (emailEl && wasAuto) { emailEl.value = ''; emailEl.dataset.auto = ''; }
   } else {
     if (newWrap) newWrap.style.display = 'none';
     const opt = sel.options[sel.selectedIndex];
     if (nameHidden) nameHidden.value = opt.text.replace(/^\+ /, '');
     if (idHidden) idHidden.value = val;
     const clientEmail = opt.getAttribute('data-email') || '';
-    if (emailEl && clientEmail) emailEl.value = clientEmail;
-    else if (emailEl && !emailEl.value) emailEl.value = '';
+    if (emailEl) {
+      if (clientEmail && (!emailEl.value || wasAuto)) {
+        emailEl.value = clientEmail; emailEl.dataset.auto = '1';
+      } else if (!clientEmail && wasAuto) {
+        emailEl.value = ''; emailEl.dataset.auto = '';
+      }
+    }
   }
   updateFormProgress();
 };
@@ -4559,32 +4638,64 @@ window.renderClientsPage = async function() {
     </div></td></tr>`;
     return;
   }
-  // Merge clients table + report counts
+  // Merge clients table + report counts. Each report contributes to exactly
+  // one key: its client_id when set, otherwise a name key — older reports
+  // predate the clients table and only carry a name, so a client row is
+  // matched by id OR by name and the two tallies are summed (never both for
+  // the same report, so no double counting).
   const reportCounts = {};
   const reportDates  = {};
   allReports.forEach(r => {
-    const cid = r.client_id || r.client_name;
-    reportCounts[cid] = (reportCounts[cid] || 0) + 1;
-    if (!reportDates[cid] || new Date(r.created_at) > new Date(reportDates[cid])) reportDates[cid] = r.created_at;
+    const key = r.client_id || 'n:' + (r.client_name || '').toLowerCase().trim();
+    reportCounts[key] = (reportCounts[key] || 0) + 1;
+    if (!reportDates[key] || new Date(r.created_at) > new Date(reportDates[key])) reportDates[key] = r.created_at;
   });
-  const rows = allClients.map(c => {
-    const key = c.id;
-    const count = reportCounts[key] || 0;
-    const lastDate = reportDates[key] ? formatDate(reportDates[key]) : '—';
+  const nameKey = n => 'n:' + (n || '').toLowerCase().trim();
+  const knownNames = new Set(allClients.map(c => (c.client_name || '').toLowerCase().trim()));
+
+  const clientRow = (c) => {
+    const nk = nameKey(c.client_name);
+    const count = (reportCounts[c.id] || 0) + (reportCounts[nk] || 0);
+    const dId = reportDates[c.id], dNm = reportDates[nk];
+    const last = [dId, dNm].filter(Boolean).sort().pop();
     return `<tr id="client-row-${escHtml(c.id)}">
       <td style="font-weight:500">${escHtml(c.client_name)}</td>
       <td style="color:var(--gray)">${escHtml(c.client_email||'—')}</td>
       <td style="color:var(--gray)">${escHtml(c.industry||'—')}</td>
       <td>${count}</td>
-      <td style="color:var(--gray)">${lastDate}</td>
+      <td style="color:var(--gray)">${last ? formatDate(last) : '—'}</td>
       <td>
         <div style="display:flex;gap:6px;align-items:center">
-          <button class="btn-sm-secondary" onclick="editClient('${c.id}')">Edit</button>
-          <button class="btn-sm-primary" onclick="filterToClient('${escHtml(c.client_name)}')">Reports →</button>
+          <button class="btn-sm-secondary" onclick="editClient('${jsArg(c.id)}')">Edit</button>
+          <button class="btn-sm-primary" onclick="filterToClient('${jsArg(c.client_name)}')">Reports →</button>
         </div>
       </td>
     </tr>`;
-  }).join('');
+  };
+
+  // Legacy clients that exist only as report names (no clients-table record)
+  // still deserve a row — read-only, since there is nothing to edit.
+  const legacyNames = [...new Set(allReports
+    .filter(r => !r.client_id || !allClients.some(c => c.id === r.client_id))
+    .map(r => r.client_name)
+    .filter(n => n && !knownNames.has(n.toLowerCase().trim())))].sort();
+  const legacyRow = (name) => {
+    const nk = nameKey(name);
+    return `<tr>
+      <td style="font-weight:500">${escHtml(name)}</td>
+      <td style="color:var(--gray)">—</td>
+      <td style="color:var(--gray)">—</td>
+      <td>${reportCounts[nk] || 0}</td>
+      <td style="color:var(--gray)">${reportDates[nk] ? formatDate(reportDates[nk]) : '—'}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn-sm-primary" onclick="filterToClient('${jsArg(name)}')">Reports →</button>
+        </div>
+      </td>
+    </tr>`;
+  };
+
+  const rows = allClients.map(clientRow).join('') + legacyNames.map(legacyRow).join('');
   tbody.innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px">No clients yet. Click "+ Add Client" to get started.</td></tr>`;
 };
 
@@ -4884,12 +4995,6 @@ window.updateFormProgress = function() {
   setStep(3, (step1Done && step2Done) ? 'active' : '');
   setConn(1, step1Done);
   setConn(2, step2Done);
-
-  // Tick + border on client name field
-  const tick  = document.getElementById('tick-client-name');
-  const input = document.getElementById('f-client-name');
-  tick?.classList.toggle('show', step1Done);
-  input?.classList.toggle('input-valid', step1Done);
 };
 window.handleDrag = function(e, areaId) {
   e.preventDefault();
@@ -4913,7 +5018,7 @@ window.showPage = function(name) {
   document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name)?.classList.add('active');
 
-  const titles = { dashboard:'Dashboard', reports:'All Reports', clients:'Clients', analytics:'Analytics', submit:'New Report', settings:'Settings' };
+  const titles = { dashboard:'Dashboard', reports:'All Reports', clients:'Clients', analytics:'Analytics', submit:'New Report', settings:'Settings', upgrade:'Upgrade' };
   document.getElementById('page-title').textContent = titles[name] || '';
 
   document.querySelectorAll('.nav-item').forEach(n => {
@@ -4955,9 +5060,14 @@ window.showPage = function(name) {
 };
 
 window.showApp = function() {
+  // Only reset to the dashboard when actually arriving from the auth screen —
+  // SIGNED_IN can also fire on session recovery while the app is already open,
+  // and yanking the user off their current page then would be jarring.
+  const wasHidden = document.getElementById('app').style.display !== 'block';
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('chat-trigger').style.display = '';
+  if (wasHidden) showPage('dashboard');
 };
 
 window.showAuth = function() {
@@ -5000,64 +5110,19 @@ window.escHtml = function(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 };
 
+// For values interpolated into single-quoted JS string literals inside inline
+// onclick attributes. escHtml alone leaves ' untouched, so a client called
+// O'Brien & Co terminated the string and broke (or hijacked) the handler.
+// JS-escape backslash + single quote first, then HTML-escape for the attribute.
+window.jsArg = function(str) {
+  return escHtml(String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+};
+
 window.showToast = function(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast ' + type + ' show';
   setTimeout(() => t.classList.remove('show'), 3500);
-};
-
-// ── CLIENT AUTOCOMPLETE ───────────────────────────────────────────────────
-let _acNames = [], _acIdx = -1, _acSetup = false;
-
-window.updateClientAutocomplete = function() {
-  _acNames = [...new Set(allReports.map(r => r.client_name).filter(Boolean))].sort();
-  if (_acSetup) return;
-  _acSetup = true;
-  const input = document.getElementById('f-client-name');
-  const dropdown = document.getElementById('ac-dropdown');
-  if (!input || !dropdown) return;
-
-  const renderAc = (q) => {
-    const f = q ? _acNames.filter(n => n.toLowerCase().includes(q.toLowerCase())) : _acNames;
-    if (!f.length || !q && document.activeElement !== input) { dropdown.classList.remove('open'); return; }
-    dropdown.innerHTML = f.map((n, i) =>
-      `<div class="ac-item" data-val="${escHtml(n)}" onmousedown="selectAcItem(event,'${escHtml(n)}')">${escHtml(n)}</div>`
-    ).join('');
-    dropdown.classList.add('open');
-    _acIdx = -1;
-  };
-
-  input.addEventListener('input', () => renderAc(input.value));
-  input.addEventListener('focus', () => renderAc(input.value));
-  input.addEventListener('keydown', e => {
-    const items = dropdown.querySelectorAll('.ac-item');
-    if (!items.length) return;
-    if (e.key === 'ArrowDown') {
-      _acIdx = Math.min(_acIdx + 1, items.length - 1);
-      items.forEach((el, i) => el.classList.toggle('ac-active', i === _acIdx));
-      e.preventDefault();
-    } else if (e.key === 'ArrowUp') {
-      _acIdx = Math.max(_acIdx - 1, -1);
-      items.forEach((el, i) => el.classList.toggle('ac-active', i === _acIdx));
-      e.preventDefault();
-    } else if (e.key === 'Enter' && _acIdx >= 0) {
-      input.value = items[_acIdx].dataset.val;
-      dropdown.classList.remove('open');
-      e.preventDefault();
-    } else if (e.key === 'Escape') {
-      dropdown.classList.remove('open');
-    }
-  });
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.ac-wrap')) dropdown.classList.remove('open');
-  });
-};
-
-window.selectAcItem = function(e, val) {
-  e.preventDefault();
-  document.getElementById('f-client-name').value = val;
-  document.getElementById('ac-dropdown').classList.remove('open');
 };
 
 // ── SUBMISSION COUNTDOWN ──────────────────────────────────────────────────
@@ -5083,6 +5148,11 @@ window.handleLogoFile = async function(input) {
   if (!file || !currentUser) return;
   const statusEl = document.getElementById('logo-upload-status');
   const resWarn = document.getElementById('logo-res-warn');
+  if (file.size > 2 * 1024 * 1024) {
+    statusEl.textContent = '✗ Logo must be under 2MB';
+    input.value = '';
+    return;
+  }
   statusEl.textContent = 'Uploading…';
   // Resolution check (non-blocking)
   if (resWarn) {
@@ -5631,15 +5701,22 @@ document.addEventListener('keydown', function(e) {
 
   if (k === 'Enter') {
     if (document.getElementById('page-submit')?.classList.contains('active')) {
-      const clientName = document.getElementById('f-client-name').value.trim();
-      const csvFile = document.getElementById('csv-file-1').files[0];
-      if (clientName && csvFile) {
-        e.preventDefault();
-        if (document.getElementById('csv-review-panel')?.classList.contains('show')) {
-          confirmCsvReview();
-        } else {
-          submitReport();
-        }
+      // Resolve the client name the same way submitReport does, so the
+      // shortcut also works for the "+ Add new client" flow.
+      const selVal = document.getElementById('f-client-select')?.value || '';
+      const clientName = selVal === '__new__'
+        ? (document.getElementById('f-client-name-new')?.value || '').trim()
+        : (document.getElementById('f-client-name')?.value || '').trim();
+      const csvFile = document.getElementById('csv-file-1')?.files[0];
+      if (!clientName || !csvFile) return;
+      e.preventDefault();
+      if (document.getElementById('csv-review-panel')?.classList.contains('show')) {
+        // Respect the "I have reviewed" gate — the button is disabled until
+        // the checkbox is ticked, and Enter must not bypass that.
+        const btn = document.getElementById('csv-review-submit-btn');
+        if (btn && !btn.disabled) confirmCsvReview();
+      } else if (!document.getElementById('submit-btn')?.disabled) {
+        submitReport();
       }
     }
   }
