@@ -2777,14 +2777,12 @@ const SUPABASE_URL = 'https://nhoxoeqsgzxdaauhgyzs.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ob3hvZXFzZ3p4ZGFhdWhneXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTkyMDcsImV4cCI6MjA5NTI3NTIwN30.sgjMGkQtEhWrI6oFHLkwTFo1zwBuSLrHGKc6wW6M190';
 const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/rivovy5izuvr2richq8x4euyew2h8y37';
 
-// Pay-as-you-go credit purchases — one-time Stripe Checkout.
-// PLACEHOLDERS: swap in the real Payment Link URLs once the one-time Prices
-// (price_payg_single £45 / price_payg_5pack £199) are created in Stripe.
+// Pay-as-you-go credit purchases — one-time Stripe Payment Links.
 // client_reference_id carries the firm_id so the Make webhook can grant the
 // credits to the right firm.
 const PAYG_CHECKOUT_LINKS = {
-  single: 'https://buy.stripe.com/REPLACE_payg_single',   // price_payg_single — £45
-  pack5:  'https://buy.stripe.com/REPLACE_payg_5pack',    // price_payg_5pack — £199
+  single: 'https://buy.stripe.com/dRm5kvgZQ35k6kd6rjes007',   // Single Report — £45
+  pack5:  'https://buy.stripe.com/28E9ALbFw6hw4c5cPHes008',   // 5-Report Pack — £199
 };
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -2807,6 +2805,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     await loadFirm();
     showApp();
+    handlePaygPurchaseReturn();
   }
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -2814,6 +2813,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       currentUser = session.user;
       await loadFirm();
       showApp();
+      handlePaygPurchaseReturn();
     }
     if (event === 'SIGNED_OUT') {
       teardownRealtime();
@@ -5923,6 +5923,23 @@ window.checkPaygNudge = async function() {
     const textEl = document.getElementById('payg-nudge-text');
     if (textEl) textEl.innerHTML = `<strong>You've bought ${purchasedThisMonth} reports this month</strong> — switching to Standard (£299/mo, unlimited) could save you money.`;
     document.getElementById('payg-nudge')?.classList.add('show');
+  }
+};
+
+// The Stripe Payment Link redirects back to /?purchase=success. Show a brief
+// confirmation and poll the balance a few times — the Make automation that
+// grants credits off the checkout.session.completed webhook usually lands
+// within a few seconds, but isn't guaranteed to beat this page load.
+window.handlePaygPurchaseReturn = function() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('purchase') !== 'success') return;
+  // Strip the param so a later refresh doesn't re-show the message.
+  params.delete('purchase');
+  const qs = params.toString();
+  history.replaceState({}, '', location.pathname + (qs ? '?' + qs : ''));
+  showToast('Purchase received — credits will appear shortly.', 'success');
+  if (currentFirm?.billing_mode === 'payg') {
+    [1500, 4000, 8000, 15000].forEach(ms => setTimeout(loadPaygBalance, ms));
   }
 };
 
