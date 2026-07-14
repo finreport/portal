@@ -2202,14 +2202,14 @@ html.dark .payg-pack-price{color:white}
                 <div class="payg-pack-name">Single Report</div>
                 <div class="payg-pack-price">£45</div>
                 <div class="payg-pack-sub">One report credit. Ideal for occasional use.</div>
-                <a class="btn-primary" id="payg-buy-single" href="#" target="_blank" rel="noopener">Buy 1 credit →</a>
+                <a class="btn-primary" id="payg-buy-single" href="https://buy.stripe.com/dRm5kvgZQ35k6kd6rjes007" target="_blank" rel="noopener">Buy 1 credit →</a>
               </div>
               <div class="payg-pack featured">
                 <span class="payg-pack-save">Save £26</span>
                 <div class="payg-pack-name">5-Pack</div>
                 <div class="payg-pack-price">£199</div>
                 <div class="payg-pack-sub">Five report credits — £39.80 per report.</div>
-                <a class="btn-primary" id="payg-buy-5pack" href="#" target="_blank" rel="noopener">Buy 5 credits →</a>
+                <a class="btn-primary" id="payg-buy-5pack" href="https://buy.stripe.com/28E9ALbFw6hw4c5cPHes008" target="_blank" rel="noopener">Buy 5 credits →</a>
               </div>
             </div>
             <p style="font-size:12px;color:var(--gray);margin-top:14px;line-height:1.5">Payment is a one-time charge via Stripe. Credits appear in your balance within a minute of purchase — this page refreshes automatically when you return.</p>
@@ -2778,11 +2778,13 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/rivovy5izuvr2richq8x4euyew2h8y37';
 
 // Pay-as-you-go credit purchases — Stripe Payment Links (no backend/secret
-// key required; Stripe hosts the checkout page itself). client_reference_id
-// carries the firm_id so the downstream Make automation knows which account
-// to credit — payment can succeed with no credits granted if it's missing,
-// so it is always re-stamped at click-time in togglePaygBuy(), never baked
-// in statically here.
+// key required; Stripe hosts the checkout page itself). The buy buttons'
+// HTML hrefs point at these base URLs as a safe fallback, but they must
+// always carry ?client_reference_id=<firm_id> when actually clicked — that
+// is how the downstream Make automation knows which account to credit;
+// payment can succeed with no credits granted if it's missing. See
+// stampPaygBuyLinks(), which re-stamps the query param onto both buttons
+// both at render time (loadFirm) and at open time (togglePaygBuy).
 const PAYG_CHECKOUT_LINKS = {
   single: 'https://buy.stripe.com/dRm5kvgZQ35k6kd6rjes007', // Single Report — £45
   pack5:  'https://buy.stripe.com/28E9ALbFw6hw4c5cPHes008', // 5-Report Pack — £199
@@ -2983,6 +2985,12 @@ window.loadFirm = async function() {
       document.querySelectorAll('.settings-nav').forEach(n => { n.style.display = 'none'; });
       document.querySelectorAll('.upgrade-nav').forEach(n => { n.style.display = ''; });
       loadPaygBalance();
+      // Stamp the buy-credit links as soon as the firm is known, not only
+      // when the buy panel is opened — so the correct, firm-specific URL is
+      // already sitting in the DOM at render time, same as how the
+      // subscription CTAs always carry a real href even before
+      // setBillingPeriod() runs.
+      stampPaygBuyLinks();
     } else if (isTrial) {
       // Free trial — full portal access, show trial banner, paywall enforced on submit
       document.getElementById('trial-banner')?.classList.add('show');
@@ -5892,24 +5900,33 @@ window.renderPaygBalance = function() {
   updateSubmitBlocked();
 };
 
+// Stamps the firm's UUID onto both buy-credit links as client_reference_id
+// (plus prefilled_email for convenience) — this is how the downstream
+// Stripe/Make automation knows whose balance to top up; payment succeeds
+// with NO credits granted if it's missing. Same base-URL-plus-query-param
+// pattern as setBillingPeriod() uses for the subscription CTAs.
+// Called at render time (loadFirm, as soon as the firm is known to be payg)
+// AND at open time (togglePaygBuy, belt-and-braces) — idempotent, safe to
+// call repeatedly, and a no-op if no one is signed in yet.
+window.stampPaygBuyLinks = function() {
+  if (!currentUser) return;
+  const qs = '?client_reference_id=' + encodeURIComponent(currentUser.id)
+    + '&prefilled_email=' + encodeURIComponent(currentUser.email || '');
+  const singleEl = document.getElementById('payg-buy-single');
+  const packEl = document.getElementById('payg-buy-5pack');
+  if (singleEl) singleEl.href = PAYG_CHECKOUT_LINKS.single + qs;
+  if (packEl) packEl.href = PAYG_CHECKOUT_LINKS.pack5 + qs;
+};
+
 window.togglePaygBuy = function(forceOpen) {
   const panel = document.getElementById('payg-buy-panel');
   if (!panel) return;
   const open = forceOpen === true ? true : forceOpen === false ? false : !panel.classList.contains('show');
   panel.classList.toggle('show', open);
-  // Stamp the firm id onto each Checkout link as client_reference_id so the
-  // Stripe webhook / Make scenario that grants credits knows which firm to
-  // credit. Deferred to open-time (not page load) so it's always current for
-  // whichever user is signed in, and re-stamped harmlessly on repeat opens.
-  if (open && currentUser) {
-    const qs = '?client_reference_id=' + encodeURIComponent(currentUser.id)
-      + '&prefilled_email=' + encodeURIComponent(currentUser.email || '');
-    const singleEl = document.getElementById('payg-buy-single');
-    const packEl = document.getElementById('payg-buy-5pack');
-    if (singleEl) singleEl.href = PAYG_CHECKOUT_LINKS.single + qs;
-    if (packEl) packEl.href = PAYG_CHECKOUT_LINKS.pack5 + qs;
+  if (open) {
+    stampPaygBuyLinks();
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
-  if (open) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 };
 
 window.dismissPaygNudge = function() {
