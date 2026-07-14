@@ -2777,14 +2777,15 @@ const SUPABASE_URL = 'https://nhoxoeqsgzxdaauhgyzs.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ob3hvZXFzZ3p4ZGFhdWhneXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTkyMDcsImV4cCI6MjA5NTI3NTIwN30.sgjMGkQtEhWrI6oFHLkwTFo1zwBuSLrHGKc6wW6M190';
 const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/rivovy5izuvr2richq8x4euyew2h8y37';
 
-// Pay-as-you-go credit purchases — one-time Stripe Checkout.
-// PLACEHOLDERS: swap in the real Payment Link URLs once the one-time Prices
-// (price_payg_single £45 / price_payg_5pack £199) are created in Stripe.
-// client_reference_id carries the firm_id so the Make webhook can grant the
-// credits to the right firm.
+// Pay-as-you-go credit purchases — Stripe Payment Links (no backend/secret
+// key required; Stripe hosts the checkout page itself). client_reference_id
+// carries the firm_id so the downstream Make automation knows which account
+// to credit — payment can succeed with no credits granted if it's missing,
+// so it is always re-stamped at click-time in togglePaygBuy(), never baked
+// in statically here.
 const PAYG_CHECKOUT_LINKS = {
-  single: 'https://buy.stripe.com/REPLACE_payg_single',   // price_payg_single — £45
-  pack5:  'https://buy.stripe.com/REPLACE_payg_5pack',    // price_payg_5pack — £199
+  single: 'https://buy.stripe.com/dRm5kvgZQ35k6kd6rjes007', // Single Report — £45
+  pack5:  'https://buy.stripe.com/28E9ALbFw6hw4c5cPHes008', // 5-Report Pack — £199
 };
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -2807,6 +2808,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     await loadFirm();
     showApp();
+    checkPurchaseReturn();
   }
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -3872,6 +3874,16 @@ window.showBrandingPreview = function() {
   const modal = document.getElementById('bp-modal');
   const body  = document.getElementById('bp-preview-body');
   if (!modal || !body) return;
+
+  // Settings (where this preview lives) is already hidden from PAYG firms in
+  // loadFirm(), but guard here too — white-label branding never applies to
+  // PAYG reports regardless of what's saved on the firms row, so the preview
+  // must not show it as if it will appear on their next report.
+  if (currentFirm?.billing_mode === 'payg') {
+    body.innerHTML = `<p class="bp-note" style="margin-top:0">Custom branding is a subscription feature and is not applied to pay-as-you-go reports, regardless of any branding saved here.</p>`;
+    modal.classList.remove('hidden');
+    return;
+  }
 
   const firmName   = document.getElementById('s-firm-name')?.value || currentFirm?.firm_name || 'Your Firm';
   const tagline    = document.getElementById('s-tagline')?.value   || currentFirm?.tagline   || '';
@@ -5935,6 +5947,33 @@ document.addEventListener('visibilitychange', () => {
     checkPaygNudge();
   }
 });
+
+// ── PAYG POST-PURCHASE RETURN ────────────────────────────────────────────
+// The Payment Link redirects back to https://app.pagevo.co.uk/?purchase=success.
+// Strip the param immediately (so a refresh doesn't re-show the message), then
+// poll the balance a few times — the Make automation that grants credits from
+// the Stripe webhook typically completes within a few seconds of payment, but
+// isn't guaranteed to have run yet by the time this redirect lands.
+window.checkPurchaseReturn = async function() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('purchase') !== 'success') return;
+  params.delete('purchase');
+  const rest = params.toString();
+  history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+
+  if (!currentUser) return; // nothing to refresh if not signed in
+
+  showToast('Purchase received — your credits will appear shortly.', 'success');
+
+  // Re-fetch the firm once up front in case billing_mode has just flipped to
+  // 'payg' server-side (e.g. a trial firm's first-ever credit purchase) —
+  // loadFirm() reveals the credit-balance card and loads the initial balance.
+  await loadFirm();
+  for (let i = 0; i < 5 && (paygCreditsRemaining === null || paygCreditsRemaining === 0); i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    await loadPaygBalance();
+  }
+};
 
 // ── Keyboard shortcuts ──────────────────────────────────────────────────────
 document.addEventListener('keydown', function(e) {
