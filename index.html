@@ -1663,6 +1663,45 @@ html.dark .trust-strip{color:rgba(255,255,255,.45);border-color:var(--gray-light
 html.dark .manage-sub{background:var(--white);border-color:var(--gray-light)}
 html.dark .manage-sub-text{color:rgba(255,255,255,.82)}
 html.dark .manage-sub-text strong{color:white}
+
+/* ── PAY AS YOU GO ── */
+.payg-mode-pick{display:flex;flex-direction:column;gap:8px}
+.payg-mode-opt{
+  display:flex;align-items:flex-start;gap:9px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:10px 12px;cursor:pointer;
+  font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.45;transition:border-color .2s;
+}
+.payg-mode-opt:hover{border-color:rgba(14,138,122,.5)}
+.payg-mode-opt input{margin-top:2px;accent-color:var(--teal);cursor:pointer;flex-shrink:0}
+.payg-mode-opt strong{color:white;font-weight:600}
+.payg-balance-label{font-size:11.5px;font-weight:600;color:var(--gray);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+.payg-balance-value{font-family:'DM Serif Display',serif;font-size:28px;color:var(--navy);line-height:1.1}
+.payg-balance-value.payg-zero{color:var(--red)}
+.payg-balance-unit{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--gray);font-weight:500}
+.payg-zero-note{font-size:12.5px;color:var(--red);margin-top:3px;display:none}
+.payg-zero-note.show{display:block}
+.payg-buy-panel{display:none;margin-bottom:20px}
+.payg-buy-panel.show{display:block}
+.payg-pack-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.payg-pack-grid{grid-template-columns:1fr}}
+.payg-pack{
+  border:1.5px solid var(--gray-light);border-radius:12px;padding:20px;
+  display:flex;flex-direction:column;gap:4px;position:relative;
+}
+.payg-pack.featured{border-color:var(--gold)}
+.payg-pack-name{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--gray)}
+.payg-pack-price{font-family:'DM Serif Display',serif;font-size:30px;color:var(--navy)}
+.payg-pack-sub{font-size:12.5px;color:var(--gray);margin-bottom:12px;line-height:1.5}
+.payg-pack-save{
+  position:absolute;top:14px;right:14px;font-size:10.5px;font-weight:700;
+  color:var(--navy);background:var(--gold);border-radius:20px;padding:2px 9px;
+}
+.payg-pack .btn-primary{justify-content:center;text-decoration:none}
+html.dark .payg-balance-value{color:white}
+html.dark .payg-pack{border-color:var(--gray-light)}
+html.dark .payg-pack.featured{border-color:var(--gold)}
+html.dark .payg-pack-price{color:white}
 </style>
 <script>
 (function(){
@@ -1709,6 +1748,19 @@ html.dark .manage-sub-text strong{color:white}
       <div class="field">
         <label for="signup-password">Password</label>
         <input type="password" id="signup-password" placeholder="Min. 8 characters" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>How would you like to pay?</label>
+        <div class="payg-mode-pick">
+          <label class="payg-mode-opt">
+            <input type="radio" name="signup-billing-mode" value="subscription" checked>
+            <span><strong>Subscription</strong> — free trial report, then unlimited reports from £299/mo</span>
+          </label>
+          <label class="payg-mode-opt">
+            <input type="radio" name="signup-billing-mode" value="payg">
+            <span><strong>Pay as you go</strong> — buy report credits when you need them, from £45/report</span>
+          </label>
+        </div>
       </div>
       <button class="btn-auth" onclick="signUp()">
         <span id="signup-text">Create account</span>
@@ -2119,6 +2171,51 @@ html.dark .manage-sub-text strong{color:white}
             <button class="paywall-cta paywall-cta-wl" onclick="showPage('upgrade')">View upgrade options →</button>
           </div>
         </div>
+
+        <!-- ── PAY AS YOU GO: credit balance (payg firms only) ── -->
+        <div class="card" id="payg-credit-card" style="display:none;margin-bottom:20px">
+          <div class="card-body" style="padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div>
+              <div class="payg-balance-label">Report Credits</div>
+              <div class="payg-balance-value" id="payg-balance-value"><span id="payg-balance-num">—</span> <span class="payg-balance-unit">remaining</span></div>
+              <div class="payg-zero-note" id="payg-zero-note">You have no credits left — buy a report below to continue.</div>
+            </div>
+            <button class="btn-primary" onclick="togglePaygBuy()">Buy more reports</button>
+          </div>
+        </div>
+
+        <!-- ── PAY AS YOU GO: upgrade nudge (3+ credits bought this month) ── -->
+        <div class="upgrade-banner" id="payg-nudge" style="margin:0 0 20px">
+          <div class="upgrade-text" id="payg-nudge-text"></div>
+          <div class="upgrade-actions">
+            <button class="btn-upgrade" onclick="showPage('upgrade')">View plans →</button>
+            <button class="btn-upgrade-dismiss" onclick="dismissPaygNudge()" title="Dismiss">×</button>
+          </div>
+        </div>
+
+        <!-- ── PAY AS YOU GO: purchase panel ── -->
+        <div class="card payg-buy-panel" id="payg-buy-panel">
+          <div class="card-header"><span class="card-title">Buy report credits</span></div>
+          <div class="card-body" style="padding:20px 24px">
+            <div class="payg-pack-grid">
+              <div class="payg-pack">
+                <div class="payg-pack-name">Single Report</div>
+                <div class="payg-pack-price">£45</div>
+                <div class="payg-pack-sub">One report credit. Ideal for occasional use.</div>
+                <a class="btn-primary" id="payg-buy-single" href="#" target="_blank" rel="noopener">Buy 1 credit →</a>
+              </div>
+              <div class="payg-pack featured">
+                <span class="payg-pack-save">Save £26</span>
+                <div class="payg-pack-name">5-Pack</div>
+                <div class="payg-pack-price">£199</div>
+                <div class="payg-pack-sub">Five report credits — £39.80 per report.</div>
+                <a class="btn-primary" id="payg-buy-5pack" href="#" target="_blank" rel="noopener">Buy 5 credits →</a>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--gray);margin-top:14px;line-height:1.5">Payment is a one-time charge via Stripe. Credits appear in your balance within a minute of purchase — this page refreshes automatically when you return.</p>
+          </div>
+        </div>
+
         <div class="card" id="submit-form-card">
           <div class="card-header"><span class="card-title">Generate New Report</span></div>
           <div class="card-body" style="padding:24px">
@@ -2679,6 +2776,16 @@ html.dark .manage-sub-text strong{color:white}
 const SUPABASE_URL = 'https://nhoxoeqsgzxdaauhgyzs.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ob3hvZXFzZ3p4ZGFhdWhneXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTkyMDcsImV4cCI6MjA5NTI3NTIwN30.sgjMGkQtEhWrI6oFHLkwTFo1zwBuSLrHGKc6wW6M190';
 const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/rivovy5izuvr2richq8x4euyew2h8y37';
+
+// Pay-as-you-go credit purchases — one-time Stripe Checkout.
+// PLACEHOLDERS: swap in the real Payment Link URLs once the one-time Prices
+// (price_payg_single £45 / price_payg_5pack £199) are created in Stripe.
+// client_reference_id carries the firm_id so the Make webhook can grant the
+// credits to the right firm.
+const PAYG_CHECKOUT_LINKS = {
+  single: 'https://buy.stripe.com/REPLACE_payg_single',   // price_payg_single — £45
+  pack5:  'https://buy.stripe.com/REPLACE_payg_5pack',    // price_payg_5pack — £199
+};
 // ─────────────────────────────────────────────────────────────────────────
 
 const { createClient } = supabase;
@@ -2687,6 +2794,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let currentFirm = null;
 let allReports = [];
+let paygCreditsRemaining = null; // null = not a payg firm / not loaded yet
 let sortField = 'created_at';
 let sortAsc = false;
 let notifications = [];
@@ -2795,16 +2903,29 @@ window.signUp = async function() {
     }
   }
 
+  // Pay-as-you-go firms skip the subscription trial entirely — they pay per
+  // report via credits, so `active` is true from the start (the trial gate
+  // only applies to the subscription path) and billing_mode routes all the
+  // PAYG-specific UI and submission gating.
+  const billingMode = document.querySelector('input[name="signup-billing-mode"]:checked')?.value === 'payg'
+    ? 'payg' : 'subscription';
+
   setAuthLoading(true, 'signup');
   // Firm name is stored in auth metadata so loadFirm can self-heal the firms
   // row if this pre-confirmation insert is rejected by RLS.
   const { data, error } = await sb.auth.signUp({ email, password, options: { data: { firm_name: firm } } });
   if (error) { setAuthLoading(false, 'signup'); showAuthError(error.message); return; }
   if (data.user) {
-    await sb.from('firms').insert({ id: data.user.id, email, firm_name: firm, plan: 'standard', active: false });
+    await sb.from('firms').insert({
+      id: data.user.id, email, firm_name: firm, plan: 'standard',
+      active: billingMode === 'payg' ? true : false,
+      billing_mode: billingMode,
+    });
   }
   setAuthLoading(false, 'signup');
-  showAuthError('Account created! Check your email to confirm, then sign in.', 'success');
+  showAuthError(billingMode === 'payg'
+    ? 'Account created! Check your email to confirm, then sign in and buy your first report credits.'
+    : 'Account created! Check your email to confirm, then sign in.', 'success');
 };
 
 window.signOut = async function() { await sb.auth.signOut(); };
@@ -2839,11 +2960,12 @@ window.loadFirm = async function() {
 
   if (currentFirm) {
     const isTrial = currentFirm.active === false;
+    const isPayg = currentFirm.billing_mode === 'payg';
     const isWhiteLabel = currentFirm.plan === 'white_label' || currentFirm.plan === 'white_label_pro';
 
     document.getElementById('sidebar-firm-name').textContent = currentFirm.firm_name || 'Your Firm';
     document.getElementById('sidebar-avatar').textContent = (currentFirm.firm_name || 'F')[0].toUpperCase();
-    document.getElementById('sidebar-plan').textContent = isTrial ? 'Free Trial' :
+    document.getElementById('sidebar-plan').textContent = isPayg ? 'Pay As You Go' : isTrial ? 'Free Trial' :
       isWhiteLabel ? (currentFirm.plan === 'white_label_pro' ? 'White Label Pro' : 'White Label') : 'Standard';
 
     // Analytics tab is White Label only
@@ -2851,7 +2973,15 @@ window.loadFirm = async function() {
       document.querySelectorAll('.analytics-nav').forEach(n => { n.style.display = 'none'; });
     }
 
-    if (isTrial) {
+    if (isPayg) {
+      // Pay-as-you-go — never subscription-gated, never white-label (that's a
+      // subscription-only perk regardless of what's in currentFirm.plan).
+      // Credit balance gates submission instead of the trial/active flag.
+      document.getElementById('payg-credit-card').style.display = '';
+      document.querySelectorAll('.settings-nav').forEach(n => { n.style.display = 'none'; });
+      document.querySelectorAll('.upgrade-nav').forEach(n => { n.style.display = ''; });
+      loadPaygBalance();
+    } else if (isTrial) {
       // Free trial — full portal access, show trial banner, paywall enforced on submit
       document.getElementById('trial-banner')?.classList.add('show');
       document.querySelectorAll('.upgrade-nav').forEach(n => { n.style.display = ''; });
@@ -2879,6 +3009,9 @@ window.loadFirm = async function() {
   // After reports loaded, check if trial paywall should show
   if (currentFirm?.active === false) {
     checkTrialPaywall();
+  }
+  if (currentFirm?.billing_mode === 'payg') {
+    checkPaygNudge();
   }
 };
 
@@ -3497,6 +3630,24 @@ window.submitReport = async function(categorisedItems) {
   }
   // ─────────────────────────────────────────────────────────────────────
 
+  // ── PAYG credit gate ─────────────────────────────────────────────────
+  // Re-check against the DB rather than trusting the in-memory
+  // paygCreditsRemaining — it can be stale if credits were spent in another
+  // tab, or if the cached value predates this session. This is the
+  // authoritative gate; the disabled buttons are just a UX head start.
+  if (currentFirm?.billing_mode === 'payg') {
+    const { data: bal } = await sb.from('firm_credit_balance')
+      .select('credits_remaining').eq('firm_id', currentUser.id).maybeSingle();
+    paygCreditsRemaining = bal?.credits_remaining ?? 0;
+    renderPaygBalance();
+    if (paygCreditsRemaining <= 0) {
+      showToast('You have no report credits left — buy more to continue.', 'error');
+      togglePaygBuy(true);
+      return false;
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────
+
   // Resolve client name from dropdown or new-client field
   const selEl = document.getElementById('f-client-select');
   const selVal = selEl?.value || '';
@@ -3553,7 +3704,13 @@ window.submitReport = async function(categorisedItems) {
       [_trialFp, _trialIp] = await Promise.all([generateBrowserFingerprint(), getClientIP()]);
     }
 
-    const isWL = currentFirm?.plan === 'white_label' || currentFirm?.plan === 'white_label_pro';
+    const isPaygFirm = currentFirm?.billing_mode === 'payg';
+    // White label is a subscription-only perk. isWL is false for any payg
+    // firm even if currentFirm.plan somehow still says 'white_label' (e.g.
+    // a firm that downgraded) — the frontend must never send branding for a
+    // payg submission. billing_mode is ALSO sent below so the Make scenario/
+    // backend enforces this independently, in case the frontend is bypassed.
+    const isWL = !isPaygFirm && (currentFirm?.plan === 'white_label' || currentFirm?.plan === 'white_label_pro');
     const payload = {
       client_business_name: clientName,
       report_type: reportType,
@@ -3561,6 +3718,7 @@ window.submitReport = async function(categorisedItems) {
       csv_data_2: csv2Text,
       additional_context: document.getElementById('f-context').value,
       firm_id: currentUser.id,
+      billing_mode: currentFirm?.billing_mode || 'subscription',
       white_label_firm: isWL ? (currentFirm?.firm_name || '') : '',
       white_label_logo: isWL ? (currentFirm?.logo_url || '') : '',
       white_label_primary_colour: isWL ? (currentFirm?.primary_colour || '') : '',
@@ -3600,6 +3758,25 @@ window.submitReport = async function(categorisedItems) {
     // Record trial fingerprint so this browser/IP can't reuse the trial
     if (currentFirm?.active === false && _trialFp) {
       recordTrialFingerprint(_trialFp, _trialIp).catch(() => {});
+    }
+
+    // Consume one report credit for payg firms. Client-side via the
+    // decrement_report_credit() RPC (atomic: locks the oldest row with
+    // credits_remaining > 0 and decrements it server-side under
+    // SECURITY DEFINER, scoped to auth.uid() so a firm can only spend its
+    // own credits). IMPORTANT: this must be confirmed against the Report
+    // Generation Make scenario before going live — if that scenario also
+    // decrements on receipt of this submission, credits will be spent twice
+    // per report. Whichever side does NOT own the decrement should have this
+    // block (or the scenario's equivalent step) removed.
+    if (isPaygFirm) {
+      const { data: newBalance, error: decErr } = await sb.rpc('decrement_report_credit');
+      if (decErr) {
+        console.warn('[payg] credit decrement failed:', decErr);
+      } else {
+        paygCreditsRemaining = newBalance;
+        renderPaygBalance();
+      }
     }
 
     setSubmitLoading(false);
@@ -4087,13 +4264,23 @@ window.toggleCsvPreview = function(slot, btn) {
   btn.classList.toggle('open', open);
 };
 
+// True when this firm must not be allowed to submit — used by both submit
+// buttons (the plain one and the CSV-review one) plus submitReport itself as
+// the final authoritative check.
+window._paygBlocked = function() {
+  return currentFirm?.billing_mode === 'payg' && paygCreditsRemaining !== null && paygCreditsRemaining <= 0;
+};
+
 window.updateSubmitBlocked = function() {
   const isComparison = document.getElementById('f-report-type')?.value === 'comparison';
-  const blocked = _csvValid[1] === false || (isComparison && _csvValid[2] === false);
+  const blocked = _csvValid[1] === false || (isComparison && _csvValid[2] === false) || _paygBlocked();
   const btn = document.getElementById('submit-btn');
   const msg = document.getElementById('csv-submit-block');
   if (btn) btn.disabled = blocked;
-  if (msg) msg.classList.toggle('show', blocked);
+  if (msg) msg.classList.toggle('show', blocked && !_paygBlocked());
+  // Also keep the CSV-review Confirm button in sync — it has its own
+  // "I have reviewed" checkbox gate but must never override a payg block.
+  updateConfirmReviewBtn();
 };
 
 // ── CSV CATEGORY REVIEW ───────────────────────────────────────────────────
@@ -4911,7 +5098,7 @@ window.reportIssue = function(reportId, clientName, period) {
 window.updateConfirmReviewBtn = function() {
   const checked = document.getElementById('csv-review-confirm-cb')?.checked;
   const btn = document.getElementById('csv-review-submit-btn');
-  if (btn) btn.disabled = !checked;
+  if (btn) btn.disabled = !checked || _paygBlocked();
 };
 
 // ── CATEGORY TOTALS ───────────────────────────────────────────────────────
@@ -5666,6 +5853,88 @@ window.checkTrialPaywall = async function() {
   const isFraud = await checkTrialFraud(fp, ip);
   if (isFraud) showPaywall('fraud');
 };
+
+// ── PAY AS YOU GO ─────────────────────────────────────────────────────────
+// firm_credit_balance is a view (SELECT firm_id, sum(credits_remaining) …
+// GROUP BY firm_id) — a firm with zero rows in report_credits simply has no
+// row in the view at all, not a row with zero, so absence means zero here.
+window.loadPaygBalance = async function() {
+  const { data, error } = await sb.from('firm_credit_balance')
+    .select('credits_remaining')
+    .eq('firm_id', currentUser.id)
+    .maybeSingle();
+  if (error) { console.warn('[payg] balance load failed:', error); return; }
+  paygCreditsRemaining = data?.credits_remaining ?? 0;
+  renderPaygBalance();
+};
+
+window.renderPaygBalance = function() {
+  const numEl = document.getElementById('payg-balance-num');
+  const valEl = document.getElementById('payg-balance-value');
+  const zeroNote = document.getElementById('payg-zero-note');
+  if (!numEl) return;
+  const n = paygCreditsRemaining ?? 0;
+  numEl.textContent = paygCreditsRemaining === null ? '—' : n;
+  valEl.classList.toggle('payg-zero', paygCreditsRemaining !== null && n === 0);
+  zeroNote?.classList.toggle('show', paygCreditsRemaining !== null && n === 0);
+  updateSubmitBlocked();
+};
+
+window.togglePaygBuy = function(forceOpen) {
+  const panel = document.getElementById('payg-buy-panel');
+  if (!panel) return;
+  const open = forceOpen === true ? true : forceOpen === false ? false : !panel.classList.contains('show');
+  panel.classList.toggle('show', open);
+  // Stamp the firm id onto each Checkout link as client_reference_id so the
+  // Stripe webhook / Make scenario that grants credits knows which firm to
+  // credit. Deferred to open-time (not page load) so it's always current for
+  // whichever user is signed in, and re-stamped harmlessly on repeat opens.
+  if (open && currentUser) {
+    const qs = '?client_reference_id=' + encodeURIComponent(currentUser.id)
+      + '&prefilled_email=' + encodeURIComponent(currentUser.email || '');
+    const singleEl = document.getElementById('payg-buy-single');
+    const packEl = document.getElementById('payg-buy-5pack');
+    if (singleEl) singleEl.href = PAYG_CHECKOUT_LINKS.single + qs;
+    if (packEl) packEl.href = PAYG_CHECKOUT_LINKS.pack5 + qs;
+  }
+  if (open) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+window.dismissPaygNudge = function() {
+  const key = 'fr_payg_nudge_dismissed_' + (currentFirm?.id || 'unknown') + '_' + new Date().toISOString().slice(0,7);
+  localStorage.setItem(key, '1');
+  document.getElementById('payg-nudge')?.classList.remove('show');
+};
+
+// "3+ credits purchased this calendar month" — soft, dismissible nudge toward
+// the subscription. Reads report_credits directly (not the summed view) so
+// it can filter by created_at and sum credits_purchased across batches.
+window.checkPaygNudge = async function() {
+  const key = 'fr_payg_nudge_dismissed_' + (currentFirm?.id || 'unknown') + '_' + new Date().toISOString().slice(0,7);
+  if (localStorage.getItem(key)) return;
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+  const { data, error } = await sb.from('report_credits')
+    .select('credits_purchased')
+    .eq('firm_id', currentUser.id)
+    .gte('created_at', monthStart.toISOString());
+  if (error || !data) return;
+  const purchasedThisMonth = data.reduce((s, r) => s + (r.credits_purchased || 0), 0);
+  if (purchasedThisMonth >= 3) {
+    const textEl = document.getElementById('payg-nudge-text');
+    if (textEl) textEl.innerHTML = `<strong>You've bought ${purchasedThisMonth} reports this month</strong> — switching to Standard (£299/mo, unlimited) could save you money.`;
+    document.getElementById('payg-nudge')?.classList.add('show');
+  }
+};
+
+// Refresh the credit balance when the tab regains focus — covers the user
+// returning from Stripe Checkout in the same tab (back button) or a new tab
+// they then close, without requiring a manual reload.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentUser && currentFirm?.billing_mode === 'payg') {
+    loadPaygBalance();
+    checkPaygNudge();
+  }
+});
 
 // ── Keyboard shortcuts ──────────────────────────────────────────────────────
 document.addEventListener('keydown', function(e) {
