@@ -3016,8 +3016,12 @@ window.loadFirm = async function() {
   await Promise.all([loadReports(), loadClients()]);
   setupRealtime();
 
-  // After reports loaded, check if trial paywall should show
-  if (currentFirm?.active === false) {
+  // After reports loaded, check if trial paywall should show. PAYG firms are
+  // never trial-gated by active/report-count — some existing firms were
+  // converted to billing_mode='payg' at the DB level without their active
+  // flag being flipped to true, so billing_mode must be checked FIRST here,
+  // not inferred from active alone.
+  if (currentFirm?.active === false && currentFirm?.billing_mode !== 'payg') {
     checkTrialPaywall();
   }
   if (currentFirm?.billing_mode === 'payg') {
@@ -3631,7 +3635,11 @@ window.submitReport = async function(categorisedItems) {
   _submitLock = true;
   try {
   // ── Trial gate ────────────────────────────────────────────────────────
-  if (currentFirm?.active === false) {
+  // PAYG firms are gated purely on credit balance (below), never on the free-
+  // trial-used flag — some existing firms were converted to billing_mode=
+  // 'payg' at the DB level without their active flag being flipped to true,
+  // so billing_mode must be checked first, not inferred from active alone.
+  if (currentFirm?.active === false && currentFirm?.billing_mode !== 'payg') {
     if (allReports.length >= 1) { showPaywall('used'); return false; }
     const fp = await generateBrowserFingerprint();
     const ip = await getClientIP();
@@ -3710,7 +3718,7 @@ window.submitReport = async function(categorisedItems) {
 
     // Gather fingerprint+IP for trial recording (run in parallel, non-blocking for paid)
     let _trialFp = '', _trialIp = '';
-    if (currentFirm?.active === false) {
+    if (currentFirm?.active === false && currentFirm?.billing_mode !== 'payg') {
       [_trialFp, _trialIp] = await Promise.all([generateBrowserFingerprint(), getClientIP()]);
     }
 
@@ -3757,6 +3765,24 @@ window.submitReport = async function(categorisedItems) {
       client_id: clientId || null,
       delivery_email: document.getElementById('f-delivery-email')?.value.trim() || currentUser.email,
     };
+
+    // Final safety net, right before the webhook fires: portal_firm_id and
+    // client_business_name are the exact two fields the Report Generation
+    // Make scenario's "Has required fields" filter checks — never let a
+    // payload with either missing/empty reach it. clientName and
+    // currentUser.id are already validated earlier in this function, so
+    // this should be unreachable in practice; it exists purely to catch any
+    // future regression before it can produce another silent DLQ failure.
+    if (!payload.portal_firm_id || !payload.client_business_name) {
+      console.warn('[submitReport] blocked — empty portal_firm_id or client_business_name', {
+        portal_firm_id: payload.portal_firm_id, client_business_name: payload.client_business_name,
+      });
+      setSubmitLoading(false);
+      document.getElementById('submit-status').className = 'submit-status error';
+      document.getElementById('submit-status').textContent =
+        'Something went wrong preparing your submission — please refresh the page and try again.';
+      return false;
+    }
 
     const _submittedAt = new Date().toISOString();
     fetch(MAKE_WEBHOOK_URL, {
@@ -4009,19 +4035,53 @@ window.saveSettings = async function() {
 };
 
 window.regenReport = async function(reportId, clientName) {
+  // ROOT CAUSE (found and fixed): this function used to send firm_id/
+  // client_name, but the Report Generation Make scenario's "Has required
+  // fields" filter (and everything downstream of it) reads
+  // {{1.portal_firm_id}} and {{1.client_business_name}} specifically —
+  // fields this function never sent. Every click of "Regen" therefore fired
+  // a webhook the scenario's own "missing required fields" branch had to
+  // catch, and any records with a stale reportId still made it to the
+  // "Has required fields" filter with an empty client_business_name and
+  // portal_firm_id, matching the exact symptom reported (both empty in the
+  // DLQ). submitReport()'s own payload construction was independently
+  // audited and could not reproduce this — clientName and currentUser.id are
+  // both validated/guaranteed non-empty before it's ever reachable, and the
+  // PAYG credit gate runs entirely before payload construction (it either
+  // returns false or falls through cleanly, never partially).
+  const firmId = currentUser?.id;
+  const report = allReports.find(r => r.id === reportId);
+  const resolvedClientName = (report?.client_name || clientName || '').trim();
+
+  // Never let an incomplete payload reach the webhook.
+  if (!firmId || !resolvedClientName) {
+    console.warn('[regenReport] blocked — missing firm_id or client_business_name', { firmId, resolvedClientName, reportId });
+    showToast('Could not resubmit this report — please refresh the page and try again.', 'error');
+    return;
+  }
+
   try {
-    await fetch('https://hook.eu1.make.com/rivovy5izuvr2richq8x4euyew2h8y37', {
+    await fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        firm_id: currentUser.id,
+        portal_firm_id: firmId,
+        client_business_name: resolvedClientName,
+        report_type: report?.report_type || 'standard',
+        billing_mode: currentFirm?.billing_mode || 'subscription',
+        firm_email: currentUser.email,
+        // Legacy keys — the Make scenario doesn't read these (confirmed via
+        // its blueprint), but kept for any other consumer of this webhook.
+        firm_id: firmId,
+        client_name: resolvedClientName,
         report_id: reportId,
-        client_name: clientName,
         accountant_notes: 'Regenerated report — original data not available, please resubmit CSV for fresh analysis.',
         regenerated: true,
       }),
     });
-  } catch(e) {}
+  } catch(e) {
+    console.warn('[regenReport] webhook request failed:', e);
+  }
   showToast('Report resubmitted — you\'ll receive it by email within 15 minutes.', 'success');
 };
 
@@ -5235,8 +5295,11 @@ window.showPage = function(name) {
     if (n.getAttribute('onclick')?.includes(name)) n.classList.add('active');
   });
 
-  // Contextual upgrade gate for Standard plan users
+  // Contextual upgrade gate for Standard plan users (never PAYG — the
+  // upgrade-to-White-Label gate is a subscription-only nudge and PAYG firms
+  // already have their own dedicated buy-credits gate elsewhere).
   const isStandard = currentFirm && currentFirm.active !== false
+    && currentFirm.billing_mode !== 'payg'
     && currentFirm.plan !== 'white_label' && currentFirm.plan !== 'white_label_pro';
   if (isStandard && (name === 'analytics' || name === 'settings')) {
     const page = document.getElementById('page-' + name);
@@ -5865,7 +5928,10 @@ window.showPaywall = function(reason) {
 };
 
 window.checkTrialPaywall = async function() {
-  if (currentFirm?.active !== false) return;
+  // Defense-in-depth: this must never fire for a PAYG firm even if some
+  // future call site forgets the billing_mode guard — PAYG has its own
+  // credit-balance gate and must never show the "free trial used" paywall.
+  if (currentFirm?.active !== false || currentFirm?.billing_mode === 'payg') return;
   if (allReports.length >= 1) { showPaywall('used'); return; }
   // Proactively check for fraud on page load
   const fp = await generateBrowserFingerprint();
